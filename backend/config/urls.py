@@ -9,6 +9,17 @@ admin.site.site_title = "ServiceDesk admin"
 
 api_v1 = [
     path("auth/", include("apps.accounts.urls")),
+    path("", include("apps.businesses.urls")),
+    path("", include("apps.customers.urls")),
+    path("", include("apps.orders.urls")),
+    path("", include("apps.estimates.urls")),
+    path("", include("apps.invoicing.urls")),
+    path("", include("apps.scheduling.urls")),
+    path("", include("apps.inventory.urls")),
+    path("", include("apps.notifications.urls")),
+    path("", include("apps.billing.urls")),
+    path("", include("apps.reports.urls")),
+    path("", include("apps.audit.urls")),
 ]
 
 urlpatterns = [
