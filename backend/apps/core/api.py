@@ -2,7 +2,7 @@
 
 from rest_framework import serializers, viewsets
 
-from .tenancy import HasWorkspaceRole, require_tenant
+from .tenancy import HasWorkspaceRole, SubscriptionAllowsWrites, require_tenant
 
 
 class TenantViewMixin:
@@ -12,7 +12,7 @@ class TenantViewMixin:
     do not exist (404), so ids from other tenants reveal nothing.
     """
 
-    permission_classes = [HasWorkspaceRole]
+    permission_classes = [HasWorkspaceRole, SubscriptionAllowsWrites]
     role_rules: dict = {}
 
     @property
@@ -63,3 +63,29 @@ class TenantSerializerMixin:
     @property
     def tenant(self):
         return self.context["tenant"]
+
+
+class StaffUserField(serializers.Field):
+    """Accepts a user's public id and resolves it to an active staff member of the active business."""
+
+    default_error_messages = {"invalid": "Choose an active team member."}
+
+    def to_representation(self, user):
+        return str(user.public_id) if user else None
+
+    def to_internal_value(self, data):
+        from apps.businesses.models import Membership
+
+        if data in (None, ""):
+            return None
+        tenant = self.context.get("tenant")
+        membership = (
+            Membership.objects.select_related("user")
+            .filter(business=tenant.business, user__public_id=data, is_active=True)
+            .first()
+            if tenant is not None
+            else None
+        )
+        if membership is None:
+            self.fail("invalid")
+        return membership.user

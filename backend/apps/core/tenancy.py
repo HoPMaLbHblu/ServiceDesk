@@ -102,6 +102,22 @@ class HasWorkspaceRole(permissions.BasePermission):
         return allowed is None or context.role in allowed
 
 
+class SubscriptionAllowsWrites(permissions.BasePermission):
+    """Read-only access once a trial ends, a subscription is cancelled or the
+    past-due grace period runs out. Billing endpoints do not use this check."""
+
+    def has_permission(self, request, view) -> bool:
+        if request.method in permissions.SAFE_METHODS:
+            return True
+        context = resolve_tenant(request)
+        if context is None:
+            return True  # HasWorkspaceRole reports the missing workspace
+        from apps.billing.services import assert_can_write
+
+        assert_can_write(context.business)
+        return True
+
+
 OWNER = frozenset({"owner"})
 MANAGERS = frozenset({"owner", "manager"})
 STAFF = frozenset({"owner", "manager", "technician"})
