@@ -47,6 +47,8 @@ class Subscription(TimeStampedModel):
     provider = models.CharField(max_length=20, default="dev")
     provider_customer_id = models.CharField(max_length=120, blank=True, db_index=True)
     provider_subscription_id = models.CharField(max_length=120, blank=True, db_index=True)
+    # Creation time of the newest provider event applied; older events cannot roll state back.
+    last_event_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self) -> str:
         return f"{self.business} on {self.plan} ({self.status})"

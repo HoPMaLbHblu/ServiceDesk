@@ -3,8 +3,6 @@
 from datetime import timedelta
 from pathlib import Path
 
-from celery.schedules import crontab
-
 from config.env import env, env_bool, env_int, env_list
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
@@ -165,7 +163,22 @@ SPECTACULAR_SETTINGS = {
     "SERVE_INCLUDE_SCHEMA": False,
     "COMPONENT_SPLIT_REQUEST": True,
     "SCHEMA_PATH_PREFIX": r"/api/v1",
-    "ENUM_NAME_OVERRIDES": {},
+    "ENUM_NAME_OVERRIDES": {
+        "OrderStatusEnum": "apps.orders.models.OrderStatus",
+        "PaymentStatusEnum": "apps.orders.models.PaymentStatus",
+        "DeviceKindEnum": "apps.customers.models.DeviceKind",
+        "EstimateStatusEnum": "apps.estimates.models.EstimateStatus",
+        "EstimateLineKindEnum": "apps.estimates.models.LineKind",
+        "InvoiceStatusEnum": "apps.invoicing.models.InvoiceStatus",
+        "PaymentKindEnum": "apps.invoicing.models.PaymentKind",
+        "AppointmentStatusEnum": "apps.scheduling.models.AppointmentStatus",
+        "AppointmentKindEnum": "apps.scheduling.models.AppointmentKind",
+        "ReservationStatusEnum": "apps.inventory.models.ReservationStatus",
+        "MovementKindEnum": "apps.inventory.models.MovementKind",
+        "NotificationStatusEnum": "apps.notifications.models.NotificationStatus",
+        "NotificationKindEnum": "apps.notifications.models.NotificationKind",
+        "OrderEventKindEnum": "apps.orders.models.EventKind",
+    },
 }
 
 # Email
@@ -200,10 +213,6 @@ CELERY_BEAT_SCHEDULE = {
     "scheduling-appointment-reminders": {
         "task": "apps.scheduling.tasks.queue_appointment_reminders",
         "schedule": timedelta(minutes=15),
-    },
-    "billing-expire-trials": {
-        "task": "apps.billing.tasks.expire_trials",
-        "schedule": crontab(minute=5),
     },
 }
 
