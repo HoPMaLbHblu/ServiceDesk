@@ -1,0 +1,141 @@
+"""Invoice PDF rendering with ReportLab. Uses only the invoice's own snapshots."""
+
+from io import BytesIO
+from xml.sax.saxutils import escape
+
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import mm
+from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+
+def _p(text: str, style) -> Paragraph:
+    return Paragraph(escape(text or "").replace("\n", "<br/>"), style)
+
+
+def render_invoice(invoice) -> bytes:
+    buffer = BytesIO()
+    doc = SimpleDocTemplate(
+        buffer,
+        pagesize=A4,
+        leftMargin=18 * mm,
+        rightMargin=18 * mm,
+        topMargin=18 * mm,
+        bottomMargin=18 * mm,
+        title=f"Invoice {invoice.reference}",
+        author=invoice.business_snapshot.get("name", ""),
+    )
+    styles = getSampleStyleSheet()
+    small = ParagraphStyle("small", parent=styles["Normal"], fontSize=9, leading=12)
+    right = ParagraphStyle("right", parent=small, alignment=2)
+    business = invoice.business_snapshot
+    customer = invoice.customer_snapshot
+    tz = invoice.business.tzinfo
+    currency = invoice.currency
+
+    story = [
+        Table(
+            [
+                [
+                    _p(business.get("name", ""), styles["Title"]),
+                    _p(
+                        f"INVOICE\n{invoice.reference}",
+                        ParagraphStyle("h", parent=styles["Heading2"], alignment=2),
+                    ),
+                ],
+                [
+                    _p(
+                        "\n".join(
+                            filter(
+                                None,
+                                [
+                                    business.get("address"),
+                                    business.get("phone"),
+                                    business.get("email"),
+                                ],
+                            )
+                        ),
+                        small,
+                    ),
+                    _p(
+                        f"Issued: {invoice.issued_at.astimezone(tz):%Y-%m-%d}\n"
+                        + (f"Due: {invoice.due_date:%Y-%m-%d}\n" if invoice.due_date else "")
+                        + f"Repair order: {invoice.order.reference}",
+                        right,
+                    ),
+                ],
+            ],
+            colWidths=["60%", "40%"],
+        ),
+        Spacer(1, 8 * mm),
+        _p("Bill to", styles["Heading4"]),
+        _p(
+            "\n".join(
+                filter(
+                    None,
+                    [
+                        customer.get("name"),
+                        customer.get("company"),
+                        customer.get("address"),
+                        customer.get("phone"),
+                        customer.get("email"),
+                    ],
+                )
+            ),
+            small,
+        ),
+        Spacer(1, 6 * mm),
+    ]
+
+    rows = [["Description", "Qty", "Unit price", "Amount"]]
+    for line in invoice.lines.all():
+        description = (
+            line.description
+            + (f" ({line.sku})" if line.sku else "")
+            + ("" if line.taxable else " *")
+        )
+        rows.append(
+            [_p(description, small), str(line.quantity), f"{line.unit_price}", f"{line.line_total}"]
+        )
+    rows += [
+        ["", "", "Subtotal", f"{currency} {invoice.subtotal}"],
+        ["", "", f"Tax ({invoice.tax_rate}%)", f"{currency} {invoice.tax_total}"],
+        ["", "", "Total", f"{currency} {invoice.total}"],
+        ["", "", "Paid", f"{currency} {invoice.amount_paid}"],
+        ["", "", "Balance due", f"{currency} {invoice.balance_due}"],
+    ]
+    table = Table(rows, colWidths=["55%", "10%", "17%", "18%"], repeatRows=1)
+    n = len(rows)
+    table.setStyle(
+        TableStyle(
+            [
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 9),
+                ("LINEBELOW", (0, 0), (-1, 0), 0.75, colors.black),
+                ("ALIGN", (1, 0), (-1, -1), "RIGHT"),
+                ("VALIGN", (0, 0), (-1, -1), "TOP"),
+                ("LINEABOVE", (2, n - 5), (-1, n - 5), 0.5, colors.grey),
+                ("FONTNAME", (2, n - 3), (-1, n - 3), "Helvetica-Bold"),
+                ("FONTNAME", (2, n - 1), (-1, n - 1), "Helvetica-Bold"),
+            ]
+        )
+    )
+    story.append(table)
+    story.append(Spacer(1, 6 * mm))
+    if any(not line.taxable for line in invoice.lines.all()):
+        story.append(_p("* Not taxed.", small))
+    if invoice.status == "void":
+        story.append(_p(f"VOID: {invoice.void_reason}", styles["Heading3"]))
+    if invoice.notes:
+        story.append(_p(invoice.notes, small))
+    story.append(Spacer(1, 4 * mm))
+    story.append(
+        _p(
+            "Generated by ServiceDesk. This document is a record of the amounts agreed with the business; "
+            "it does not assert compliance with any jurisdiction's tax invoice requirements.",
+            ParagraphStyle("fine", parent=small, textColor=colors.grey, fontSize=7.5),
+        )
+    )
+    doc.build(story)
+    return buffer.getvalue()
