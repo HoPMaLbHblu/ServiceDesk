@@ -32,6 +32,7 @@ DJANGO_SETTINGS_MODULE = "config.settings.test"
 python_files = ["test_*.py"]
 testpaths = ["apps"]
 addopts = "-ra --strict-markers"
+filterwarnings = ["ignore:No directory at:UserWarning"]
 markers = [
     "concurrency: tests that use real PostgreSQL transactions across threads",
 ]
