@@ -273,18 +273,18 @@ def revoke_invitation(*, invitation: Invitation, actor) -> Invitation:
 # --- Roles and removal ---------------------------------------------------------
 
 
-def _lock_active_owners(business) -> list[Membership]:
+def _lock_active_owners(business_id) -> list[Membership]:
     # Every change that can reduce the number of owners locks the same rows in
     # the same order, so concurrent demotions are serialized.
     return list(
         Membership.objects.select_for_update()
-        .filter(business=business, role=Role.OWNER, is_active=True)
+        .filter(business_id=business_id, role=Role.OWNER, is_active=True)
         .order_by("pk")
     )
 
 
-def _ensure_another_owner_remains(business, membership: Membership) -> None:
-    owners = _lock_active_owners(business)
+def _ensure_another_owner_remains(business_id, membership: Membership) -> None:
+    owners = _lock_active_owners(business_id)
     if membership.role == Role.OWNER and membership.is_active and len(owners) <= 1:
         raise ConflictError(
             "A workspace needs at least one active owner. Make someone else an owner first.",
@@ -296,11 +296,14 @@ def _ensure_another_owner_remains(business, membership: Membership) -> None:
 def change_role(*, membership: Membership, new_role: str, actor) -> Membership:
     if new_role not in Role.values:
         raise DomainError("Unknown role.", code="invalid_role")
+    # Lock the owner rows before the target row; taking them in the opposite
+    # order lets two concurrent demotions deadlock.
+    _lock_active_owners(membership.business_id)
     membership = Membership.objects.select_for_update().get(pk=membership.pk)
     if membership.role == new_role:
         return membership
     if membership.role == Role.OWNER:
-        _ensure_another_owner_remains(membership.business, membership)
+        _ensure_another_owner_remains(membership.business_id, membership)
     old = membership.role
     membership.role = new_role
     membership.save(update_fields=["role", "updated_at"])
@@ -317,10 +320,11 @@ def change_role(*, membership: Membership, new_role: str, actor) -> Membership:
 
 @transaction.atomic
 def deactivate_member(*, membership: Membership, actor) -> Membership:
+    _lock_active_owners(membership.business_id)
     membership = Membership.objects.select_for_update().get(pk=membership.pk)
     if not membership.is_active:
         return membership
-    _ensure_another_owner_remains(membership.business, membership)
+    _ensure_another_owner_remains(membership.business_id, membership)
     membership.is_active = False
     membership.save(update_fields=["is_active", "updated_at"])
     record(

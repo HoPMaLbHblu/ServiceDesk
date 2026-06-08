@@ -25,3 +25,4 @@ backups/
 .idea/
 .vscode/
 .DS_Store
+backend/.test-media/

@@ -80,6 +80,11 @@ class Shop:
         receive_stock(part=self.part, quantity=Decimal("5"), actor=self.owner)
         self.part.refresh_from_db()
 
+    def upgrade(self, plan_code: str = "business") -> None:
+        from apps.billing.models import Plan, Subscription
+
+        Subscription.objects.filter(business=self.business).update(plan=Plan.objects.get(code=plan_code), status="active")
+
     def client(self, role: str = "owner") -> APIClient:
         return client_for(getattr(self, role), self.business)
 
