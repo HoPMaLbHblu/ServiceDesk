@@ -30,7 +30,12 @@ class AccessState:
 
 
 def start_trial(business) -> Subscription:
-    plan = Plan.objects.get(code=DEFAULT_PLAN_CODE)
+    from .plans import ensure_default_plans
+
+    plan = Plan.objects.filter(code=DEFAULT_PLAN_CODE).first()
+    if plan is None:
+        ensure_default_plans(Plan)
+        plan = Plan.objects.get(code=DEFAULT_PLAN_CODE)
     return Subscription.objects.create(
         business=business,
         plan=plan,
