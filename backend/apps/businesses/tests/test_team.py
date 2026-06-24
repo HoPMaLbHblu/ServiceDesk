@@ -24,7 +24,15 @@ def invitation_token() -> str:
 def test_onboarding_creates_owned_workspace_with_trial():
     user = make_user("founder@example.com")
     client = client_for(user)
-    response = client.post("/api/v1/workspaces/", {"name": "Fix-It Shop", "timezone": "America/New_York", "currency": "USD", "tax_rate": "8.25"})
+    response = client.post(
+        "/api/v1/workspaces/",
+        {
+            "name": "Fix-It Shop",
+            "timezone": "America/New_York",
+            "currency": "USD",
+            "tax_rate": "8.25",
+        },
+    )
     assert response.status_code == 201, response.data
     assert response.data["active_workspace"]["role"] == "owner"
     assert response.data["active_workspace"]["timezone"] == "America/New_York"
@@ -69,7 +77,9 @@ def test_role_matrix(shop, role, method, url, expected):
 def test_invitation_flow_is_single_use_and_bound_to_email(shop):
     shop.upgrade()
     owner = shop.client("owner")
-    response = owner.post("/api/v1/invitations/", {"email": "New.Tech@Example.com", "role": "technician"})
+    response = owner.post(
+        "/api/v1/invitations/", {"email": "New.Tech@Example.com", "role": "technician"}
+    )
     assert response.status_code == 201, response.data
     token = invitation_token()
 
@@ -78,7 +88,10 @@ def test_invitation_flow_is_single_use_and_bound_to_email(shop):
 
     stranger = client_for(make_user("someone.else@example.com"))
     response = stranger.post("/api/v1/invitations/accept/", {"token": token})
-    assert response.status_code == 400 and response.data["error"]["code"] == "invitation_email_mismatch"
+    assert (
+        response.status_code == 400
+        and response.data["error"]["code"] == "invitation_email_mismatch"
+    )
 
     invitee = make_user("new.tech@example.com", verified=False)
     client = client_for(invitee)
@@ -97,11 +110,18 @@ def test_expired_and_revoked_invitations_cannot_be_used(shop):
     owner = shop.client("owner")
     owner.post("/api/v1/invitations/", {"email": "late@example.com", "role": "manager"})
     token = invitation_token()
-    Invitation.objects.filter(email="late@example.com").update(expires_at=timezone.now() - timedelta(minutes=1))
+    Invitation.objects.filter(email="late@example.com").update(
+        expires_at=timezone.now() - timedelta(minutes=1)
+    )
     late = client_for(make_user("late@example.com"))
-    assert late.post("/api/v1/invitations/accept/", {"token": token}).data["error"]["code"] == "invalid_invitation"
+    assert (
+        late.post("/api/v1/invitations/accept/", {"token": token}).data["error"]["code"]
+        == "invalid_invitation"
+    )
 
-    invitation = owner.post("/api/v1/invitations/", {"email": "revoked@example.com", "role": "manager"}).data
+    invitation = owner.post(
+        "/api/v1/invitations/", {"email": "revoked@example.com", "role": "manager"}
+    ).data
     token = invitation_token()
     assert owner.post(f"/api/v1/invitations/{invitation['id']}/revoke/").status_code == 200
     revoked = client_for(make_user("revoked@example.com"))
@@ -111,7 +131,9 @@ def test_expired_and_revoked_invitations_cannot_be_used(shop):
 def test_unverified_owner_cannot_invite():
     user = make_user("unverified@example.com", verified=False)
     business = create_business(owner=user, name="Unverified Shop")
-    response = client_for(user, business).post("/api/v1/invitations/", {"email": "x@example.com", "role": "manager"})
+    response = client_for(user, business).post(
+        "/api/v1/invitations/", {"email": "x@example.com", "role": "manager"}
+    )
     assert response.status_code == 400 and response.data["error"]["code"] == "email_not_verified"
 
 
@@ -125,12 +147,20 @@ def test_last_owner_cannot_be_demoted_or_removed(shop):
 
     # With a second owner, the first can step down.
     second = Membership.objects.get(business=shop.business, user=shop.manager)
-    assert owner.post(f"/api/v1/members/{second.pk}/change_role/", {"role": "owner"}).status_code == 200
-    assert owner.post(f"/api/v1/members/{membership.pk}/change_role/", {"role": "manager"}).status_code == 200
+    assert (
+        owner.post(f"/api/v1/members/{second.pk}/change_role/", {"role": "owner"}).status_code
+        == 200
+    )
+    assert (
+        owner.post(f"/api/v1/members/{membership.pk}/change_role/", {"role": "manager"}).status_code
+        == 200
+    )
     # The audit log recorded the role changes.
     from apps.audit.models import AuditLog
 
-    assert AuditLog.objects.filter(business=shop.business, action="member.role_changed").count() == 2
+    assert (
+        AuditLog.objects.filter(business=shop.business, action="member.role_changed").count() == 2
+    )
 
 
 @pytest.mark.django_db(transaction=True)
@@ -165,13 +195,17 @@ def test_concurrent_demotions_leave_one_owner():
     for t in threads:
         t.join()
     assert sorted(results) == ["ok", "refused"]
-    assert Membership.objects.filter(business=business, role=Role.OWNER, is_active=True).count() == 1
+    assert (
+        Membership.objects.filter(business=business, role=Role.OWNER, is_active=True).count() == 1
+    )
 
 
 def test_staff_limit_counts_pending_invitations(shop):
     owner = shop.client("owner")
     # Starter allows 3 staff and the shop already has 3 members.
-    response = owner.post("/api/v1/invitations/", {"email": "fourth@example.com", "role": "technician"})
+    response = owner.post(
+        "/api/v1/invitations/", {"email": "fourth@example.com", "role": "technician"}
+    )
     assert response.status_code == 402
     assert response.data["error"]["code"] == "staff_limit_reached"
 
@@ -182,6 +216,9 @@ def test_password_login_works_for_invited_user_after_accepting(shop):
     owner.post("/api/v1/invitations/", {"email": "joiner@example.com", "role": "manager"})
     token = invitation_token()
     client = APIClient()
-    client.post("/api/v1/auth/register/", {"email": "joiner@example.com", "full_name": "Joiner", "password": PASSWORD})
+    client.post(
+        "/api/v1/auth/register/",
+        {"email": "joiner@example.com", "full_name": "Joiner", "password": PASSWORD},
+    )
     assert client.post("/api/v1/invitations/accept/", {"token": token}).status_code == 200
     assert client.get("/api/v1/customers/").status_code == 200
