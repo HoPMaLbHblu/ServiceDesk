@@ -86,7 +86,7 @@ class CustomerViewSet(TenantModelViewSet):
         return queryset.distinct()
 
     @extend_schema(responses=DeviceSerializer(many=True))
-    @action(detail=True, methods=["get"])
+    @action(detail=True, methods=["get"], pagination_class=None)
     def devices(self, request, public_id=None):
         customer = self.get_object()
         devices = Device.objects.filter(business=self.tenant.business, customer=customer)
@@ -98,7 +98,7 @@ class CustomerViewSet(TenantModelViewSet):
     @extend_schema(
         methods=["post"], request=CustomerNoteSerializer, responses={201: CustomerNoteSerializer}
     )
-    @action(detail=True, methods=["get", "post"])
+    @action(detail=True, methods=["get", "post"], pagination_class=None)
     def notes(self, request, public_id=None):
         customer = self.get_object()
         if request.method == "POST":
@@ -118,7 +118,7 @@ class CustomerViewSet(TenantModelViewSet):
         return Response(CustomerNoteSerializer(notes, many=True).data)
 
     @extend_schema(responses=PortalAccessSerializer(many=True))
-    @action(detail=True, methods=["get"])
+    @action(detail=True, methods=["get"], pagination_class=None)
     def portal_access(self, request, public_id=None):
         customer = self.get_object()
         links = customer.portal_access.filter(revoked_at__isnull=True).select_related("user")
