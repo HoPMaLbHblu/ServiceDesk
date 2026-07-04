@@ -1,0 +1,7414 @@
+openapi: 3.0.3
+info:
+  title: ServiceDesk API
+  version: 1.0.0
+  description: REST API for the ServiceDesk repair-shop platform.
+paths:
+  /api/v1/appointments/:
+    get:
+      operationId: appointments_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: customer
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - diagnosis
+          - drop_off
+          - pickup
+          - repair
+        description: |-
+          * `drop_off` - Device drop-off
+          * `diagnosis` - Diagnosis
+          * `repair` - Repair
+          * `pickup` - Pickup
+      - in: query
+        name: order
+        schema:
+          type: string
+          format: uuid
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - cancelled
+          - completed
+          - no_show
+          - scheduled
+        description: |-
+          * `scheduled` - Scheduled
+          * `completed` - Completed
+          * `cancelled` - Cancelled
+          * `no_show` - No-show
+      - in: query
+        name: technician
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - appointments
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Appointment'
+          description: ''
+    post:
+      operationId: appointments_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - appointments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/BookRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/BookRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
+  /api/v1/appointments/{public_id}/:
+    get:
+      operationId: appointments_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - appointments
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
+  /api/v1/appointments/{public_id}/reschedule/:
+    post:
+      operationId: appointments_reschedule_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - appointments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RescheduleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RescheduleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RescheduleRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
+  /api/v1/appointments/{public_id}/set_status/:
+    post:
+      operationId: appointments_set_status_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - appointments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatusRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatusRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AppointmentStatusRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Appointment'
+          description: ''
+  /api/v1/appointments/availability/:
+    get:
+      operationId: appointments_availability_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: customer
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: date
+        schema:
+          type: string
+          format: date
+        required: true
+      - in: query
+        name: duration_minutes
+        schema:
+          type: integer
+          maximum: 480
+          minimum: 15
+          default: 60
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - diagnosis
+          - drop_off
+          - pickup
+          - repair
+        description: |-
+          * `drop_off` - Device drop-off
+          * `diagnosis` - Diagnosis
+          * `repair` - Repair
+          * `pickup` - Pickup
+      - in: query
+        name: order
+        schema:
+          type: string
+          format: uuid
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date-time
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - cancelled
+          - completed
+          - no_show
+          - scheduled
+        description: |-
+          * `scheduled` - Scheduled
+          * `completed` - Completed
+          * `cancelled` - Cancelled
+          * `no_show` - No-show
+      - in: query
+        name: technician
+        schema:
+          type: string
+          format: uuid
+          nullable: true
+        required: true
+      tags:
+      - appointments
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+                  format: date-time
+          description: ''
+  /api/v1/audit-log/:
+    get:
+      operationId: audit_log_list
+      description: Read-only. There is no endpoint that changes audit records.
+      parameters:
+      - in: query
+        name: action
+        schema:
+          type: string
+      - in: query
+        name: action__startswith
+        schema:
+          type: string
+      - in: query
+        name: created_at__date__gte
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: created_at__date__lte
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: entity_type
+        schema:
+          type: string
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - audit-log
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedAuditLogList'
+          description: ''
+  /api/v1/auth/change-password/:
+    post:
+      operationId: auth_change_password_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/login/:
+    post:
+      operationId: auth_login_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      tags:
+      - auth
+      security:
+      - sessionAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/me/:
+    get:
+      operationId: auth_me_retrieve
+      tags:
+      - auth
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+    patch:
+      operationId: auth_me_partial_update
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserRequest'
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/auth/password-reset/:
+    post:
+      operationId: auth_password_reset_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      - {}
+      responses:
+        '202':
+          description: No response body
+  /api/v1/auth/password-reset/confirm/:
+    post:
+      operationId: auth_password_reset_confirm_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PasswordResetConfirmRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      - {}
+      responses:
+        '204':
+          description: No response body
+  /api/v1/auth/register/:
+    post:
+      operationId: auth_register_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/auth/resend-verification/:
+    post:
+      operationId: auth_resend_verification_create
+      tags:
+      - auth
+      security:
+      - sessionAuth: []
+      responses:
+        '202':
+          description: No response body
+  /api/v1/auth/session/:
+    get:
+      operationId: auth_session_retrieve
+      description: |-
+        Restores the client session: who is logged in and which workspace is active.
+
+        Also sets the CSRF cookie the SPA needs for unsafe requests.
+      tags:
+      - auth
+      security:
+      - sessionAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/auth/verify-email/:
+    post:
+      operationId: auth_verify_email_create
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/v1/billing/checkout/:
+    post:
+      operationId: billing_checkout_create
+      tags:
+      - billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PlanChoiceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PlanChoiceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PlanChoiceRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Redirect'
+          description: ''
+  /api/v1/billing/dev/:
+    post:
+      operationId: billing_dev_create
+      description: 'Development billing mode only: simulate provider events through
+        the real event pipeline.'
+      tags:
+      - billing
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DevBillingActionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DevBillingActionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DevBillingActionRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionState'
+          description: ''
+  /api/v1/billing/portal/:
+    post:
+      operationId: billing_portal_create
+      tags:
+      - billing
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Redirect'
+          description: ''
+  /api/v1/billing/subscription/:
+    get:
+      operationId: billing_subscription_retrieve
+      description: Billing endpoints stay usable when the workspace is read-only,
+        so owners can fix billing.
+      tags:
+      - billing
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SubscriptionState'
+          description: ''
+  /api/v1/business/:
+    get:
+      operationId: business_retrieve
+      tags:
+      - business
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+          description: ''
+    patch:
+      operationId: business_partial_update
+      tags:
+      - business
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedBusinessRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedBusinessRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedBusinessRequest'
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Business'
+          description: ''
+  /api/v1/business/hours/:
+    get:
+      operationId: business_hours_list
+      tags:
+      - business
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessHours'
+          description: ''
+    put:
+      operationId: business_hours_update
+      tags:
+      - business
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/BusinessHoursRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/BusinessHoursRequest'
+          multipart/form-data:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/BusinessHoursRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BusinessHours'
+          description: ''
+  /api/v1/customers/:
+    get:
+      operationId: customers_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: has_open_orders
+        schema:
+          type: boolean
+      - in: query
+        name: is_archived
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - customers
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedCustomerList'
+          description: ''
+    post:
+      operationId: customers_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - customers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomerRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+  /api/v1/customers/{public_id}/:
+    get:
+      operationId: customers_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - customers
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+    patch:
+      operationId: customers_partial_update
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - customers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomerRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomerRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedCustomerRequest'
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer'
+          description: ''
+  /api/v1/customers/{public_id}/devices/:
+    get:
+      operationId: customers_devices_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: has_open_orders
+        schema:
+          type: boolean
+      - in: query
+        name: is_archived
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - customers
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Device'
+          description: ''
+  /api/v1/customers/{public_id}/invite_to_portal/:
+    post:
+      operationId: customers_invite_to_portal_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - customers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PortalInviteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PortalInviteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PortalInviteRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '202':
+          description: No response body
+  /api/v1/customers/{public_id}/notes/:
+    get:
+      operationId: customers_notes_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: has_open_orders
+        schema:
+          type: boolean
+      - in: query
+        name: is_archived
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - customers
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/CustomerNote'
+          description: ''
+    post:
+      operationId: customers_notes_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - customers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomerNoteRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomerNoteRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomerNoteRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerNote'
+          description: ''
+  /api/v1/customers/{public_id}/portal_access/:
+    get:
+      operationId: customers_portal_access_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: has_open_orders
+        schema:
+          type: boolean
+      - in: query
+        name: is_archived
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - customers
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PortalAccess'
+          description: ''
+  /api/v1/customers/{public_id}/revoke_portal/:
+    post:
+      operationId: customers_revoke_portal_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - customers
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RevokePortalRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RevokePortalRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RevokePortalRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/devices/:
+    get:
+      operationId: devices_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: customer__public_id
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - console
+          - desktop
+          - laptop
+          - other
+          - phone
+          - tablet
+          - wearable
+        description: |-
+          * `phone` - Phone
+          * `tablet` - Tablet
+          * `laptop` - Laptop
+          * `desktop` - Desktop
+          * `console` - Game console
+          * `wearable` - Wearable
+          * `other` - Other
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - devices
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedDeviceList'
+          description: ''
+    post:
+      operationId: devices_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - devices
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DeviceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DeviceRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+          description: ''
+  /api/v1/devices/{public_id}/:
+    get:
+      operationId: devices_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - devices
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+          description: ''
+    patch:
+      operationId: devices_partial_update
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - devices
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDeviceRequest'
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+          description: ''
+  /api/v1/estimates/:
+    get:
+      operationId: estimates_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: order__public_id
+        schema:
+          type: string
+          format: uuid
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - approved
+          - draft
+          - rejected
+          - sent
+          - superseded
+        description: |-
+          * `draft` - Draft
+          * `sent` - Sent to customer
+          * `approved` - Approved
+          * `rejected` - Rejected
+          * `superseded` - Superseded
+      tags:
+      - estimates
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Estimate'
+          description: ''
+    post:
+      operationId: estimates_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - estimates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EstimateCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/EstimateCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/EstimateCreateRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Estimate'
+          description: ''
+  /api/v1/estimates/{public_id}/:
+    get:
+      operationId: estimates_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - estimates
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Estimate'
+          description: ''
+  /api/v1/estimates/{public_id}/lines/:
+    post:
+      operationId: estimates_lines_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - estimates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReplaceLinesRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReplaceLinesRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReplaceLinesRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Estimate'
+          description: ''
+  /api/v1/estimates/{public_id}/record_decision/:
+    post:
+      operationId: estimates_record_decision_create
+      description: Record a decision the customer gave in person or by phone.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - estimates
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffDecisionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StaffDecisionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StaffDecisionRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Estimate'
+          description: ''
+  /api/v1/estimates/{public_id}/send/:
+    post:
+      operationId: estimates_send_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - estimates
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Estimate'
+          description: ''
+  /api/v1/invitations/:
+    get:
+      operationId: invitations_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - invitations
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Invitation'
+          description: ''
+    post:
+      operationId: invitations_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - invitations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InvitationCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InvitationCreateRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+          description: ''
+  /api/v1/invitations/{public_id}/revoke/:
+    post:
+      operationId: invitations_revoke_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - invitations
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Invitation'
+          description: ''
+  /api/v1/invitations/accept/:
+    post:
+      operationId: invitations_accept_create
+      tags:
+      - invitations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationTokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InvitationTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InvitationTokenRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/invitations/preview/:
+    post:
+      operationId: invitations_preview_create
+      description: Shows who invited whom before the recipient signs in. Reveals nothing
+        without the token.
+      tags:
+      - invitations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InvitationTokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InvitationTokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InvitationTokenRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvitationPreview'
+          description: ''
+  /api/v1/invoices/:
+    get:
+      operationId: invoices_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: issued_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: issued_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: order
+        schema:
+          type: string
+          format: uuid
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: query
+        name: outstanding
+        schema:
+          type: boolean
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - issued
+          - void
+        description: |-
+          * `issued` - Issued
+          * `void` - Void
+      tags:
+      - invoices
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedInvoiceListList'
+          description: ''
+    post:
+      operationId: invoices_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - invoices
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/IssueInvoiceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/IssueInvoiceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/IssueInvoiceRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceDetail'
+          description: ''
+  /api/v1/invoices/{public_id}/:
+    get:
+      operationId: invoices_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - invoices
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceDetail'
+          description: ''
+  /api/v1/invoices/{public_id}/payments/:
+    post:
+      operationId: invoices_payments_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - invoices
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RecordPaymentRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RecordPaymentRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RecordPaymentRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/v1/invoices/{public_id}/pdf/:
+    get:
+      operationId: invoices_pdf_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - invoices
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: PDF document
+  /api/v1/invoices/{public_id}/void/:
+    post:
+      operationId: invoices_void_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - invoices
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VoidRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VoidRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VoidRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InvoiceDetail'
+          description: ''
+  /api/v1/members/:
+    get:
+      operationId: members_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: query
+        name: role
+        schema:
+          type: string
+          enum:
+          - manager
+          - owner
+          - technician
+        description: |-
+          * `owner` - Owner
+          * `manager` - Manager
+          * `technician` - Technician
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - members
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Member'
+          description: ''
+  /api/v1/members/{id}/:
+    get:
+      operationId: members_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this membership.
+        required: true
+      tags:
+      - members
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/v1/members/{id}/change_role/:
+    post:
+      operationId: members_change_role_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this membership.
+        required: true
+      tags:
+      - members
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangeRoleRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ChangeRoleRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ChangeRoleRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/v1/members/{id}/deactivate/:
+    post:
+      operationId: members_deactivate_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this membership.
+        required: true
+      tags:
+      - members
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Member'
+          description: ''
+  /api/v1/members/staff_options/:
+    get:
+      operationId: members_staff_options_list
+      description: Active staff who can be assigned work (owners, managers and technicians).
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: query
+        name: role
+        schema:
+          type: string
+          enum:
+          - manager
+          - owner
+          - technician
+        description: |-
+          * `owner` - Owner
+          * `manager` - Manager
+          * `technician` - Technician
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - members
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/StaffOption'
+          description: ''
+  /api/v1/notifications/:
+    get:
+      operationId: notifications_list
+      description: Delivery log of emails sent on behalf of the workspace.
+      parameters:
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - appointment_confirmation
+          - appointment_reminder
+          - email_verification
+          - estimate_approval_request
+          - invitation
+          - low_stock
+          - order_status
+          - password_reset
+          - portal_access
+        description: |-
+          * `email_verification` - Email verification
+          * `password_reset` - Password reset
+          * `invitation` - Staff invitation
+          * `appointment_confirmation` - Appointment confirmation
+          * `appointment_reminder` - Appointment reminder
+          * `estimate_approval_request` - Estimate approval request
+          * `order_status` - Repair status update
+          * `low_stock` - Low-stock alert
+          * `portal_access` - Customer portal access
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - cancelled
+          - failed
+          - pending
+          - sending
+          - sent
+        description: |-
+          * `pending` - Pending
+          * `sending` - Sending
+          * `sent` - Sent
+          * `failed` - Failed
+          * `cancelled` - Cancelled
+      tags:
+      - notifications
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedNotificationList'
+          description: ''
+  /api/v1/notifications/{id}/:
+    get:
+      operationId: notifications_retrieve
+      description: Delivery log of emails sent on behalf of the workspace.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this notification.
+        required: true
+      tags:
+      - notifications
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/notifications/{id}/retry/:
+    post:
+      operationId: notifications_retry_create
+      description: Delivery log of emails sent on behalf of the workspace.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this notification.
+        required: true
+      tags:
+      - notifications
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Notification'
+          description: ''
+  /api/v1/orders/:
+    get:
+      operationId: orders_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: created_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: created_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: customer
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: device
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: open
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: payment_status
+        schema:
+          type: string
+          enum:
+          - not_invoiced
+          - paid
+          - partially_paid
+          - refunded
+          - unpaid
+        description: |-
+          * `not_invoiced` - Not invoiced
+          * `unpaid` - Unpaid
+          * `partially_paid` - Partially paid
+          * `paid` - Paid
+          * `refunded` - Refunded
+      - in: query
+        name: priority
+        schema:
+          type: string
+          enum:
+          - high
+          - low
+          - normal
+          - urgent
+        description: |-
+          * `low` - Low
+          * `normal` - Normal
+          * `high` - High
+          * `urgent` - Urgent
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - awaiting_approval
+            - cancelled
+            - completed
+            - diagnosing
+            - in_progress
+            - new
+            - ready_for_pickup
+            - scheduled
+        description: |-
+          * `new` - New
+          * `scheduled` - Scheduled
+          * `diagnosing` - Diagnosing
+          * `awaiting_approval` - Awaiting approval
+          * `in_progress` - In progress
+          * `ready_for_pickup` - Ready for pickup
+          * `completed` - Completed
+          * `cancelled` - Cancelled
+        explode: true
+        style: form
+      - in: query
+        name: technician
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: unassigned
+        schema:
+          type: boolean
+      tags:
+      - orders
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedOrderListList'
+          description: ''
+    post:
+      operationId: orders_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+          description: ''
+  /api/v1/orders/{public_id}/:
+    get:
+      operationId: orders_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - orders
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+          description: ''
+    patch:
+      operationId: orders_partial_update
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderUpdateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderUpdateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrderUpdateRequest'
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+          description: ''
+  /api/v1/orders/{public_id}/attachments/:
+    get:
+      operationId: orders_attachments_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: created_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: created_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: customer
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: device
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: open
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: query
+        name: payment_status
+        schema:
+          type: string
+          enum:
+          - not_invoiced
+          - paid
+          - partially_paid
+          - refunded
+          - unpaid
+        description: |-
+          * `not_invoiced` - Not invoiced
+          * `unpaid` - Unpaid
+          * `partially_paid` - Partially paid
+          * `paid` - Paid
+          * `refunded` - Refunded
+      - in: query
+        name: priority
+        schema:
+          type: string
+          enum:
+          - high
+          - low
+          - normal
+          - urgent
+        description: |-
+          * `low` - Low
+          * `normal` - Normal
+          * `high` - High
+          * `urgent` - Urgent
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - awaiting_approval
+            - cancelled
+            - completed
+            - diagnosing
+            - in_progress
+            - new
+            - ready_for_pickup
+            - scheduled
+        description: |-
+          * `new` - New
+          * `scheduled` - Scheduled
+          * `diagnosing` - Diagnosing
+          * `awaiting_approval` - Awaiting approval
+          * `in_progress` - In progress
+          * `ready_for_pickup` - Ready for pickup
+          * `completed` - Completed
+          * `cancelled` - Cancelled
+        explode: true
+        style: form
+      - in: query
+        name: technician
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: unassigned
+        schema:
+          type: boolean
+      tags:
+      - orders
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Attachment'
+          description: ''
+    post:
+      operationId: orders_attachments_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AttachmentUploadRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Attachment'
+          description: ''
+  /api/v1/orders/{public_id}/attachments/{attachment_id}/download/:
+    get:
+      operationId: orders_attachments_download_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: attachment_id
+        schema:
+          type: string
+          pattern: ^[0-9a-f-]{36}$
+        required: true
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - orders
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/orders/{public_id}/diagnostics/:
+    post:
+      operationId: orders_diagnostics_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DiagnosticsRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DiagnosticsRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DiagnosticsRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+          description: ''
+  /api/v1/orders/{public_id}/notes/:
+    post:
+      operationId: orders_notes_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NoteCreateRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/NoteCreateRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/NoteCreateRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderEvent'
+          description: ''
+  /api/v1/orders/{public_id}/timeline/:
+    get:
+      operationId: orders_timeline_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: created_after
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: created_before
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: customer
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: device
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: open
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - in: query
+        name: payment_status
+        schema:
+          type: string
+          enum:
+          - not_invoiced
+          - paid
+          - partially_paid
+          - refunded
+          - unpaid
+        description: |-
+          * `not_invoiced` - Not invoiced
+          * `unpaid` - Unpaid
+          * `partially_paid` - Partially paid
+          * `paid` - Paid
+          * `refunded` - Refunded
+      - in: query
+        name: priority
+        schema:
+          type: string
+          enum:
+          - high
+          - low
+          - normal
+          - urgent
+        description: |-
+          * `low` - Low
+          * `normal` - Normal
+          * `high` - High
+          * `urgent` - Urgent
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: array
+          items:
+            type: string
+            enum:
+            - awaiting_approval
+            - cancelled
+            - completed
+            - diagnosing
+            - in_progress
+            - new
+            - ready_for_pickup
+            - scheduled
+        description: |-
+          * `new` - New
+          * `scheduled` - Scheduled
+          * `diagnosing` - Diagnosing
+          * `awaiting_approval` - Awaiting approval
+          * `in_progress` - In progress
+          * `ready_for_pickup` - Ready for pickup
+          * `completed` - Completed
+          * `cancelled` - Cancelled
+        explode: true
+        style: form
+      - in: query
+        name: technician
+        schema:
+          type: string
+          format: uuid
+      - in: query
+        name: unassigned
+        schema:
+          type: boolean
+      tags:
+      - orders
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/OrderEvent'
+          description: ''
+  /api/v1/orders/{public_id}/transition/:
+    post:
+      operationId: orders_transition_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - orders
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransitionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TransitionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TransitionRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDetail'
+          description: ''
+  /api/v1/parts/:
+    get:
+      operationId: parts_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: low_stock
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: unit
+        schema:
+          type: string
+          enum:
+          - gram
+          - meter
+          - ml
+          - piece
+          - set
+        description: |-
+          * `piece` - Piece
+          * `set` - Set
+          * `meter` - Meter
+          * `ml` - Milliliter
+          * `gram` - Gram
+      tags:
+      - parts
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPartList'
+          description: ''
+    post:
+      operationId: parts_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - parts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PartRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PartRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+          description: ''
+  /api/v1/parts/{public_id}/:
+    get:
+      operationId: parts_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - parts
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+          description: ''
+    patch:
+      operationId: parts_partial_update
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - parts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedPartRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedPartRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedPartRequest'
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Part'
+          description: ''
+  /api/v1/parts/{public_id}/adjust/:
+    post:
+      operationId: parts_adjust_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - parts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustStockRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/AdjustStockRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/AdjustStockRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockMovement'
+          description: ''
+  /api/v1/parts/{public_id}/movements/:
+    get:
+      operationId: parts_movements_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: is_active
+        schema:
+          type: boolean
+      - in: query
+        name: low_stock
+        schema:
+          type: boolean
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: unit
+        schema:
+          type: string
+          enum:
+          - gram
+          - meter
+          - ml
+          - piece
+          - set
+        description: |-
+          * `piece` - Piece
+          * `set` - Set
+          * `meter` - Meter
+          * `ml` - Milliliter
+          * `gram` - Gram
+      tags:
+      - parts
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStockMovementList'
+          description: ''
+  /api/v1/parts/{public_id}/receive/:
+    post:
+      operationId: parts_receive_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - parts
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReceiveStockRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReceiveStockRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReceiveStockRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StockMovement'
+          description: ''
+  /api/v1/payments/{public_id}/:
+    get:
+      operationId: payments_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - payments
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/v1/payments/{public_id}/refund/:
+    post:
+      operationId: payments_refund_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - payments
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RefundRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Payment'
+          description: ''
+  /api/v1/portal/accept/:
+    post:
+      operationId: portal_accept_create
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TokenRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/portal/appointments/:
+    get:
+      operationId: portal_appointments_list
+      tags:
+      - portal
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PortalAppointment'
+          description: ''
+  /api/v1/portal/customers/:
+    get:
+      operationId: portal_customers_list
+      tags:
+      - portal
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PortalCustomer'
+          description: ''
+  /api/v1/portal/estimates/{estimate_id}/decision/:
+    post:
+      operationId: portal_estimates_decision_create
+      parameters:
+      - in: path
+        name: estimate_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DecisionRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicEstimate'
+          description: ''
+  /api/v1/portal/invoices/{invoice_id}/pdf/:
+    get:
+      operationId: portal_invoices_pdf_retrieve
+      parameters:
+      - in: path
+        name: invoice_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - portal
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/portal/orders/:
+    get:
+      operationId: portal_orders_list
+      tags:
+      - portal
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/PortalOrder'
+          description: ''
+    post:
+      operationId: portal_orders_create
+      description: Submit a repair request. Staff see it as a new order created from
+        the portal.
+      tags:
+      - portal
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RepairRequestRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/RepairRequestRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/RepairRequestRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortalOrder'
+          description: ''
+  /api/v1/portal/orders/{order_id}/:
+    get:
+      operationId: portal_orders_retrieve
+      parameters:
+      - in: path
+        name: order_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - portal
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PortalOrderDetail'
+          description: ''
+  /api/v1/portal/orders/{order_id}/attachments/{attachment_id}/download/:
+    get:
+      operationId: portal_orders_attachments_download_retrieve
+      parameters:
+      - in: path
+        name: attachment_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      - in: path
+        name: order_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - portal
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+                format: binary
+          description: ''
+  /api/v1/public/approvals/{token}/:
+    get:
+      operationId: public_approvals_retrieve
+      description: Approval page reached from the emailed link. The token only grants
+        this one estimate version.
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - public
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicEstimate'
+          description: ''
+    post:
+      operationId: public_approvals_create
+      description: Approval page reached from the emailed link. The token only grants
+        this one estimate version.
+      parameters:
+      - in: path
+        name: token
+        schema:
+          type: string
+        required: true
+      tags:
+      - public
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PublicDecisionRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PublicDecisionRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PublicDecisionRequest'
+        required: true
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicEstimate'
+          description: ''
+  /api/v1/reports/dashboard/:
+    get:
+      operationId: reports_dashboard_retrieve
+      parameters:
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      tags:
+      - reports
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/v1/reports/export/{dataset}.csv:
+    get:
+      operationId: reports_export_.csv_retrieve
+      parameters:
+      - in: path
+        name: dataset
+        schema:
+          type: string
+          enum:
+          - customers
+          - invoices
+          - orders
+          - parts
+          - payments
+        required: true
+      - in: query
+        name: end
+        schema:
+          type: string
+          format: date
+      - in: query
+        name: start
+        schema:
+          type: string
+          format: date
+      tags:
+      - reports
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: string
+          description: CSV file
+  /api/v1/reservations/:
+    get:
+      operationId: reservations_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: order__public_id
+        schema:
+          type: string
+          format: uuid
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: status
+        schema:
+          type: string
+          enum:
+          - active
+          - consumed
+          - released
+        description: |-
+          * `active` - Reserved
+          * `consumed` - Consumed
+          * `released` - Released
+      tags:
+      - reservations
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reservation'
+          description: ''
+    post:
+      operationId: reservations_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - reservations
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReserveRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/ReserveRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/ReserveRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+  /api/v1/reservations/{public_id}/consume/:
+    post:
+      operationId: reservations_consume_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - reservations
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+  /api/v1/reservations/{public_id}/release/:
+    post:
+      operationId: reservations_release_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: public_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - reservations
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reservation'
+          description: ''
+  /api/v1/stock-movements/:
+    get:
+      operationId: stock_movements_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: query
+        name: kind
+        schema:
+          type: string
+          enum:
+          - adjustment
+          - consumption
+          - receipt
+          - release
+          - reservation
+        description: |-
+          * `receipt` - Stock received
+          * `adjustment` - Manual adjustment
+          * `reservation` - Reserved for order
+          * `release` - Reservation released
+          * `consumption` - Used in repair
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      - in: query
+        name: part__public_id
+        schema:
+          type: string
+          format: uuid
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      tags:
+      - stock-movements
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedStockMovementList'
+          description: ''
+  /api/v1/technician-availability/:
+    get:
+      operationId: technician_availability_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: technician__public_id
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - technician-availability
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TechnicianAvailability'
+          description: ''
+    post:
+      operationId: technician_availability_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - technician-availability
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TechnicianAvailabilityRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TechnicianAvailabilityRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TechnicianAvailabilityRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechnicianAvailability'
+          description: ''
+  /api/v1/technician-availability/{id}/:
+    get:
+      operationId: technician_availability_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this technician availability.
+        required: true
+      tags:
+      - technician-availability
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechnicianAvailability'
+          description: ''
+    patch:
+      operationId: technician_availability_partial_update
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this technician availability.
+        required: true
+      tags:
+      - technician-availability
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTechnicianAvailabilityRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTechnicianAvailabilityRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTechnicianAvailabilityRequest'
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TechnicianAvailability'
+          description: ''
+    delete:
+      operationId: technician_availability_destroy
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this technician availability.
+        required: true
+      tags:
+      - technician-availability
+      security:
+      - sessionAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/time-off/:
+    get:
+      operationId: time_off_list
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      - name: search
+        required: false
+        in: query
+        description: A search term.
+        schema:
+          type: string
+      - in: query
+        name: technician__public_id
+        schema:
+          type: string
+          format: uuid
+      tags:
+      - time-off
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TimeOff'
+          description: ''
+    post:
+      operationId: time_off_create
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      tags:
+      - time-off
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeOffRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/TimeOffRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/TimeOffRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeOff'
+          description: ''
+  /api/v1/time-off/{id}/:
+    get:
+      operationId: time_off_retrieve
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this time off.
+        required: true
+      tags:
+      - time-off
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeOff'
+          description: ''
+    patch:
+      operationId: time_off_partial_update
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this time off.
+        required: true
+      tags:
+      - time-off
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeOffRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeOffRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedTimeOffRequest'
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeOff'
+          description: ''
+    delete:
+      operationId: time_off_destroy
+      description: |-
+        Scopes every queryset to the active business.
+
+        Lookups of records from another business behave exactly like records that
+        do not exist (404), so ids from other tenants reveal nothing.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        description: A unique integer value identifying this time off.
+        required: true
+      tags:
+      - time-off
+      security:
+      - sessionAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/v1/workspaces/:
+    get:
+      operationId: workspaces_list
+      description: Workspaces the user belongs to, and onboarding of a new business.
+      tags:
+      - workspaces
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Workspace'
+          description: ''
+    post:
+      operationId: workspaces_create
+      description: Workspaces the user belongs to, and onboarding of a new business.
+      tags:
+      - workspaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBusinessRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CreateBusinessRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CreateBusinessRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+  /api/v1/workspaces/switch/:
+    post:
+      operationId: workspaces_switch_create
+      tags:
+      - workspaces
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SwitchWorkspaceRequest'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/SwitchWorkspaceRequest'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/SwitchWorkspaceRequest'
+        required: true
+      security:
+      - sessionAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Session'
+          description: ''
+components:
+  schemas:
+    ActionEnum:
+      enum:
+      - activate
+      - payment_failed
+      - payment_succeeded
+      - cancel
+      type: string
+      description: |-
+        * `activate` - activate
+        * `payment_failed` - payment_failed
+        * `payment_succeeded` - payment_succeeded
+        * `cancel` - cancel
+    ActiveWorkspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          type: string
+        timezone:
+          type: string
+        currency:
+          type: string
+      required:
+      - currency
+      - id
+      - name
+      - role
+      - timezone
+    AdjustStockRequest:
+      type: object
+      properties:
+        counted_quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        reason:
+          type: string
+          minLength: 1
+      required:
+      - counted_quantity
+      - reason
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        customer:
+          type: string
+          format: uuid
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        technician:
+          type: string
+          format: uuid
+          readOnly: true
+        technician_name:
+          type: string
+          readOnly: true
+        order:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        order_reference:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/AppointmentKindEnum'
+        kind_label:
+          type: string
+          readOnly: true
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        status:
+          $ref: '#/components/schemas/AppointmentStatusEnum'
+        notes:
+          type: string
+        cancellation_reason:
+          type: string
+          maxLength: 255
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - customer
+      - customer_name
+      - ends_at
+      - id
+      - kind_label
+      - order
+      - order_reference
+      - starts_at
+      - technician
+      - technician_name
+    AppointmentKindEnum:
+      enum:
+      - drop_off
+      - diagnosis
+      - repair
+      - pickup
+      type: string
+      description: |-
+        * `drop_off` - Device drop-off
+        * `diagnosis` - Diagnosis
+        * `repair` - Repair
+        * `pickup` - Pickup
+    AppointmentStatusEnum:
+      enum:
+      - scheduled
+      - completed
+      - cancelled
+      - no_show
+      type: string
+      description: |-
+        * `scheduled` - Scheduled
+        * `completed` - Completed
+        * `cancelled` - Cancelled
+        * `no_show` - No-show
+    AppointmentStatusRequest:
+      type: object
+      properties:
+        status:
+          $ref: '#/components/schemas/AppointmentStatusStatusEnum'
+        reason:
+          type: string
+          default: ''
+      required:
+      - status
+    AppointmentStatusStatusEnum:
+      enum:
+      - completed
+      - cancelled
+      - no_show
+      type: string
+      description: |-
+        * `completed` - Completed
+        * `cancelled` - Cancelled
+        * `no_show` - No-show
+    Attachment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        original_name:
+          type: string
+          maxLength: 255
+        content_type:
+          type: string
+          maxLength: 100
+        size:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        caption:
+          type: string
+          maxLength: 200
+        visible_to_customer:
+          type: boolean
+        uploaded_by_name:
+          type: string
+          readOnly: true
+          default: ''
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - content_type
+      - created_at
+      - id
+      - original_name
+      - size
+      - uploaded_by_name
+    AttachmentUploadRequest:
+      type: object
+      properties:
+        file:
+          type: string
+          format: binary
+        caption:
+          type: string
+          default: ''
+        visible_to_customer:
+          type: boolean
+          default: false
+      required:
+      - file
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        actor_label:
+          type: string
+          maxLength: 200
+        action:
+          type: string
+          maxLength: 80
+        entity_type:
+          type: string
+          maxLength: 80
+        entity_id:
+          type: string
+          maxLength: 64
+        entity_label:
+          type: string
+          maxLength: 200
+        changes: {}
+        request_id:
+          type: string
+          maxLength: 64
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - action
+      - created_at
+      - entity_id
+      - entity_type
+      - id
+    BlankEnum:
+      enum:
+      - ''
+    BookRequest:
+      type: object
+      properties:
+        customer:
+          type: string
+          format: uuid
+        technician:
+          type: string
+          format: uuid
+          nullable: true
+        order:
+          type: string
+          format: uuid
+          nullable: true
+        kind:
+          allOf:
+          - $ref: '#/components/schemas/AppointmentKindEnum'
+          default: diagnosis
+        starts_at:
+          type: string
+          format: date-time
+        duration_minutes:
+          type: integer
+          maximum: 480
+          minimum: 15
+        notes:
+          type: string
+          default: ''
+      required:
+      - customer
+      - duration_minutes
+      - starts_at
+      - technician
+    Business:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 120
+        slug:
+          type: string
+          readOnly: true
+          pattern: ^[-a-zA-Z0-9_]+$
+        timezone:
+          type: string
+          maxLength: 64
+        currency:
+          $ref: '#/components/schemas/CurrencyEnum'
+        tax_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        default_labor_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        estimate_valid_days:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone:
+          type: string
+          maxLength: 40
+        address:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - slug
+    BusinessHours:
+      type: object
+      properties:
+        weekday:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        opens_at:
+          type: string
+          format: time
+          nullable: true
+        closes_at:
+          type: string
+          format: time
+          nullable: true
+        is_closed:
+          type: boolean
+      required:
+      - weekday
+    BusinessHoursRequest:
+      type: object
+      properties:
+        weekday:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        opens_at:
+          type: string
+          format: time
+          nullable: true
+        closes_at:
+          type: string
+          format: time
+          nullable: true
+        is_closed:
+          type: boolean
+      required:
+      - weekday
+    ChangePasswordRequest:
+      type: object
+      properties:
+        current_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - current_password
+      - new_password
+    ChangeRoleRequest:
+      type: object
+      properties:
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+      required:
+      - role
+    CreateBusinessRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        timezone:
+          type: string
+          minLength: 1
+          default: UTC
+          maxLength: 64
+        currency:
+          allOf:
+          - $ref: '#/components/schemas/CurrencyEnum'
+          default: USD
+        tax_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+          default: '0.00'
+        phone:
+          type: string
+          maxLength: 40
+        email:
+          oneOf:
+          - type: string
+            format: email
+          - type: string
+            maxLength: 0
+        address:
+          type: string
+      required:
+      - name
+    CurrencyEnum:
+      enum:
+      - USD
+      - EUR
+      - GBP
+      - CAD
+      - AUD
+      - UAH
+      - PLN
+      type: string
+      description: |-
+        * `USD` - US dollar
+        * `EUR` - Euro
+        * `GBP` - British pound
+        * `CAD` - Canadian dollar
+        * `AUD` - Australian dollar
+        * `UAH` - Ukrainian hryvnia
+        * `PLN` - Polish zloty
+    Customer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 150
+        company:
+          type: string
+          maxLength: 150
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone:
+          type: string
+          maxLength: 40
+        address:
+          type: string
+        customer_notes:
+          type: string
+        marketing_opt_in:
+          type: boolean
+        is_archived:
+          type: boolean
+        device_count:
+          type: integer
+          readOnly: true
+          default: 0
+        open_order_count:
+          type: integer
+          readOnly: true
+          default: 0
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - device_count
+      - full_name
+      - id
+      - open_order_count
+    CustomerContact:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone:
+          type: string
+          maxLength: 40
+      required:
+      - id
+      - name
+    CustomerNote:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        body:
+          type: string
+        author_name:
+          type: string
+          readOnly: true
+          default: ''
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - author_name
+      - body
+      - created_at
+      - id
+    CustomerNoteRequest:
+      type: object
+      properties:
+        body:
+          type: string
+          minLength: 1
+      required:
+      - body
+    CustomerRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        company:
+          type: string
+          maxLength: 150
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone:
+          type: string
+          maxLength: 40
+        address:
+          type: string
+        customer_notes:
+          type: string
+        marketing_opt_in:
+          type: boolean
+        is_archived:
+          type: boolean
+      required:
+      - full_name
+    DecisionChannelEnum:
+      enum:
+      - portal
+      - link
+      - staff
+      type: string
+      description: |-
+        * `portal` - Customer portal
+        * `link` - Approval link
+        * `staff` - Recorded by staff on the customer's behalf
+    DecisionEnum:
+      enum:
+      - approve
+      - reject
+      type: string
+      description: |-
+        * `approve` - approve
+        * `reject` - reject
+    DecisionRequest:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/DecisionEnum'
+        note:
+          type: string
+          default: ''
+        content_hash:
+          type: string
+      required:
+      - decision
+    DevBillingActionRequest:
+      type: object
+      properties:
+        action:
+          $ref: '#/components/schemas/ActionEnum'
+        plan:
+          type: string
+          minLength: 1
+      required:
+      - action
+    Device:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        customer:
+          type: string
+          format: uuid
+        customer_name:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/DeviceKindEnum'
+        brand:
+          type: string
+          maxLength: 80
+        model:
+          type: string
+          maxLength: 120
+        serial_number:
+          type: string
+          maxLength: 120
+        imei:
+          type: string
+          maxLength: 20
+        color:
+          type: string
+          maxLength: 40
+        notes:
+          type: string
+          description: Internal notes about the device.
+        label:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - brand
+      - created_at
+      - customer
+      - customer_name
+      - id
+      - label
+      - model
+    DeviceKindEnum:
+      enum:
+      - phone
+      - tablet
+      - laptop
+      - desktop
+      - console
+      - wearable
+      - other
+      type: string
+      description: |-
+        * `phone` - Phone
+        * `tablet` - Tablet
+        * `laptop` - Laptop
+        * `desktop` - Desktop
+        * `console` - Game console
+        * `wearable` - Wearable
+        * `other` - Other
+    DeviceRef:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/DeviceKindEnum'
+        brand:
+          type: string
+          maxLength: 80
+        model:
+          type: string
+          maxLength: 120
+        serial_number:
+          type: string
+          maxLength: 120
+        imei:
+          type: string
+          maxLength: 20
+        color:
+          type: string
+          maxLength: 40
+      required:
+      - brand
+      - id
+      - model
+    DeviceRequest:
+      type: object
+      properties:
+        customer:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/DeviceKindEnum'
+        brand:
+          type: string
+          minLength: 1
+          maxLength: 80
+        model:
+          type: string
+          minLength: 1
+          maxLength: 120
+        serial_number:
+          type: string
+          maxLength: 120
+        imei:
+          type: string
+          maxLength: 20
+        color:
+          type: string
+          maxLength: 40
+        notes:
+          type: string
+          description: Internal notes about the device.
+      required:
+      - brand
+      - customer
+      - model
+    DiagnosticsRequest:
+      type: object
+      properties:
+        findings:
+          type: string
+          minLength: 1
+      required:
+      - findings
+    EmailRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+    Estimate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        order:
+          type: string
+          format: uuid
+          readOnly: true
+        order_reference:
+          type: string
+          readOnly: true
+        version:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        status:
+          $ref: '#/components/schemas/EstimateStatusEnum'
+        status_label:
+          type: string
+          readOnly: true
+        notes:
+          type: string
+          description: Shown to the customer.
+        currency:
+          type: string
+          maxLength: 3
+        tax_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        subtotal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        tax_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        valid_until:
+          type: string
+          format: date
+          nullable: true
+        content_hash:
+          type: string
+          maxLength: 64
+        decided_at:
+          type: string
+          format: date-time
+          nullable: true
+        decided_by_name:
+          type: string
+          maxLength: 200
+        decision_channel:
+          oneOf:
+          - $ref: '#/components/schemas/DecisionChannelEnum'
+          - $ref: '#/components/schemas/BlankEnum'
+        decision_note:
+          type: string
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/EstimateLine'
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - currency
+      - id
+      - lines
+      - order
+      - order_reference
+      - status_label
+      - tax_rate
+      - updated_at
+      - version
+    EstimateCreateRequest:
+      type: object
+      properties:
+        order:
+          type: string
+          format: uuid
+      required:
+      - order
+    EstimateLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        position:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        kind:
+          $ref: '#/components/schemas/EstimateLineKindEnum'
+        part:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        sku:
+          type: string
+          maxLength: 64
+        description:
+          type: string
+          maxLength: 255
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        unit_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        taxable:
+          type: boolean
+        line_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+      required:
+      - description
+      - id
+      - kind
+      - line_total
+      - part
+      - quantity
+      - unit_price
+    EstimateLineKindEnum:
+      enum:
+      - labor
+      - part
+      - fee
+      type: string
+      description: |-
+        * `labor` - Labor
+        * `part` - Part
+        * `fee` - Fee
+    EstimateStatusEnum:
+      enum:
+      - draft
+      - sent
+      - approved
+      - rejected
+      - superseded
+      type: string
+      description: |-
+        * `draft` - Draft
+        * `sent` - Sent to customer
+        * `approved` - Approved
+        * `rejected` - Rejected
+        * `superseded` - Superseded
+    Invitation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        status:
+          type: string
+          readOnly: true
+        expires_at:
+          type: string
+          format: date-time
+          readOnly: true
+        invited_by_name:
+          type: string
+          readOnly: true
+          default: ''
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - expires_at
+      - id
+      - invited_by_name
+      - role
+      - status
+    InvitationCreateRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+      required:
+      - email
+      - role
+    InvitationPreview:
+      type: object
+      properties:
+        business_name:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+        status:
+          type: string
+      required:
+      - business_name
+      - email
+      - role
+      - status
+    InvitationTokenRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - token
+    InvoiceDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        number:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        reference:
+          type: string
+          readOnly: true
+        order:
+          type: string
+          format: uuid
+          readOnly: true
+        order_reference:
+          type: string
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/InvoiceStatusEnum'
+        currency:
+          type: string
+          maxLength: 3
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        amount_paid:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        balance_due:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        payment_status:
+          type: string
+          readOnly: true
+        issued_at:
+          type: string
+          format: date-time
+        due_date:
+          type: string
+          format: date
+          nullable: true
+        tax_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        subtotal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        tax_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        business_snapshot: {}
+        customer_snapshot: {}
+        notes:
+          type: string
+        void_reason:
+          type: string
+        voided_at:
+          type: string
+          format: date-time
+          nullable: true
+        estimate_version:
+          type: integer
+          readOnly: true
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceLine'
+          readOnly: true
+        payments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Payment'
+          readOnly: true
+      required:
+      - balance_due
+      - currency
+      - customer_name
+      - estimate_version
+      - id
+      - issued_at
+      - lines
+      - number
+      - order
+      - order_reference
+      - payment_status
+      - payments
+      - reference
+      - subtotal
+      - tax_rate
+      - tax_total
+      - total
+    InvoiceLine:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        position:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        kind:
+          type: string
+          maxLength: 10
+        sku:
+          type: string
+          maxLength: 64
+        description:
+          type: string
+          maxLength: 255
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        unit_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        taxable:
+          type: boolean
+        line_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+      required:
+      - description
+      - id
+      - kind
+      - line_total
+      - quantity
+      - unit_price
+    InvoiceList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        number:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        reference:
+          type: string
+          readOnly: true
+        order:
+          type: string
+          format: uuid
+          readOnly: true
+        order_reference:
+          type: string
+          readOnly: true
+        customer_name:
+          type: string
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/InvoiceStatusEnum'
+        currency:
+          type: string
+          maxLength: 3
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        amount_paid:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        balance_due:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        payment_status:
+          type: string
+          readOnly: true
+        issued_at:
+          type: string
+          format: date-time
+        due_date:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - balance_due
+      - currency
+      - customer_name
+      - id
+      - issued_at
+      - number
+      - order
+      - order_reference
+      - payment_status
+      - reference
+      - total
+    InvoiceStatusEnum:
+      enum:
+      - issued
+      - void
+      type: string
+      description: |-
+        * `issued` - Issued
+        * `void` - Void
+    IssueInvoiceRequest:
+      type: object
+      properties:
+        order:
+          type: string
+          format: uuid
+        due_days:
+          type: integer
+          maximum: 365
+          minimum: 0
+          default: 14
+        notes:
+          type: string
+          default: ''
+      required:
+      - order
+    LineInputRequest:
+      type: object
+      properties:
+        kind:
+          $ref: '#/components/schemas/EstimateLineKindEnum'
+        part:
+          type: string
+          format: uuid
+          nullable: true
+        description:
+          type: string
+          maxLength: 255
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        unit_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        taxable:
+          type: boolean
+          default: true
+      required:
+      - quantity
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - password
+    Member:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        user_id:
+          type: string
+          format: uuid
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        role:
+          $ref: '#/components/schemas/RoleEnum'
+        is_active:
+          type: boolean
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - full_name
+      - id
+      - is_active
+      - role
+      - user_id
+    MembershipSummary:
+      type: object
+      properties:
+        business_id:
+          type: string
+          format: uuid
+        business_name:
+          type: string
+        role:
+          type: string
+      required:
+      - business_id
+      - business_name
+      - role
+    MethodEnum:
+      enum:
+      - cash
+      - card
+      - bank_transfer
+      - other
+      type: string
+      description: |-
+        * `cash` - Cash
+        * `card` - Card (terminal)
+        * `bank_transfer` - Bank transfer
+        * `other` - Other
+    MovementKindEnum:
+      enum:
+      - receipt
+      - adjustment
+      - reservation
+      - release
+      - consumption
+      type: string
+      description: |-
+        * `receipt` - Stock received
+        * `adjustment` - Manual adjustment
+        * `reservation` - Reserved for order
+        * `release` - Reservation released
+        * `consumption` - Used in repair
+    NoteCreateRequest:
+      type: object
+      properties:
+        body:
+          type: string
+          minLength: 1
+        visible_to_customer:
+          type: boolean
+          default: false
+      required:
+      - body
+    Notification:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/NotificationKindEnum'
+        recipient_email:
+          type: string
+          format: email
+          maxLength: 254
+        subject:
+          type: string
+          maxLength: 200
+        body:
+          type: string
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/NotificationStatusEnum'
+        attempts:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        max_attempts:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        next_attempt_at:
+          type: string
+          format: date-time
+        last_error:
+          type: string
+          maxLength: 500
+        sent_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - body
+      - created_at
+      - id
+      - kind
+      - recipient_email
+      - subject
+    NotificationKindEnum:
+      enum:
+      - email_verification
+      - password_reset
+      - invitation
+      - appointment_confirmation
+      - appointment_reminder
+      - estimate_approval_request
+      - order_status
+      - low_stock
+      - portal_access
+      type: string
+      description: |-
+        * `email_verification` - Email verification
+        * `password_reset` - Password reset
+        * `invitation` - Staff invitation
+        * `appointment_confirmation` - Appointment confirmation
+        * `appointment_reminder` - Appointment reminder
+        * `estimate_approval_request` - Estimate approval request
+        * `order_status` - Repair status update
+        * `low_stock` - Low-stock alert
+        * `portal_access` - Customer portal access
+    NotificationStatusEnum:
+      enum:
+      - pending
+      - sending
+      - sent
+      - failed
+      - cancelled
+      type: string
+      description: |-
+        * `pending` - Pending
+        * `sending` - Sending
+        * `sent` - Sent
+        * `failed` - Failed
+        * `cancelled` - Cancelled
+    OrderCreateRequest:
+      type: object
+      properties:
+        customer:
+          type: string
+          format: uuid
+        device:
+          type: string
+          format: uuid
+        problem_description:
+          type: string
+          minLength: 1
+        priority:
+          allOf:
+          - $ref: '#/components/schemas/PriorityEnum'
+          default: normal
+        assigned_technician:
+          type: string
+          format: uuid
+          nullable: true
+        expected_completion_date:
+          type: string
+          format: date
+          nullable: true
+      required:
+      - customer
+      - device
+      - problem_description
+    OrderDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        number:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        reference:
+          type: string
+          readOnly: true
+        customer:
+          allOf:
+          - $ref: '#/components/schemas/CustomerContact'
+          readOnly: true
+        device_label:
+          type: string
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/OrderStatusEnum'
+        status_label:
+          type: string
+          readOnly: true
+        payment_status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        assigned_technician:
+          allOf:
+          - $ref: '#/components/schemas/PersonRef'
+          readOnly: true
+          nullable: true
+        expected_completion_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+        device:
+          allOf:
+          - $ref: '#/components/schemas/DeviceRef'
+          readOnly: true
+        problem_description:
+          type: string
+        diagnostic_findings:
+          type: string
+        diagnosed_at:
+          type: string
+          format: date-time
+          nullable: true
+        diagnosed_by:
+          allOf:
+          - $ref: '#/components/schemas/PersonRef'
+          readOnly: true
+          nullable: true
+        source:
+          $ref: '#/components/schemas/OrderDetailSourceEnum'
+        status_changed_at:
+          type: string
+          format: date-time
+          nullable: true
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        cancelled_at:
+          type: string
+          format: date-time
+          nullable: true
+        cancellation_reason:
+          type: string
+        version:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        allowed_transitions:
+          type: array
+          items:
+            type: string
+          readOnly: true
+      required:
+      - allowed_transitions
+      - assigned_technician
+      - created_at
+      - customer
+      - device
+      - device_label
+      - diagnosed_by
+      - id
+      - number
+      - problem_description
+      - reference
+      - status_label
+      - updated_at
+    OrderDetailSourceEnum:
+      enum:
+      - staff
+      - portal
+      type: string
+      description: |-
+        * `staff` - Created by staff
+        * `portal` - Customer request
+    OrderEvent:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/OrderEventKindEnum'
+        actor_label:
+          type: string
+          maxLength: 200
+        message:
+          type: string
+        visible_to_customer:
+          type: boolean
+        from_status:
+          type: string
+          maxLength: 24
+        to_status:
+          type: string
+          maxLength: 24
+        data: {}
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - kind
+    OrderEventKindEnum:
+      enum:
+      - created
+      - status_changed
+      - assigned
+      - updated
+      - diagnostics
+      - internal_note
+      - customer_update
+      - attachment
+      - estimate
+      - parts
+      - appointment
+      - invoice
+      - payment
+      type: string
+      description: |-
+        * `created` - Order created
+        * `status_changed` - Status changed
+        * `assigned` - Technician assigned
+        * `updated` - Details updated
+        * `diagnostics` - Diagnostics recorded
+        * `internal_note` - Internal note
+        * `customer_update` - Customer update
+        * `attachment` - Attachment added
+        * `estimate` - Estimate
+        * `parts` - Parts
+        * `appointment` - Appointment
+        * `invoice` - Invoice
+        * `payment` - Payment
+    OrderList:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        number:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+        reference:
+          type: string
+          readOnly: true
+        customer:
+          allOf:
+          - $ref: '#/components/schemas/PersonRef'
+          readOnly: true
+        device_label:
+          type: string
+          readOnly: true
+        status:
+          $ref: '#/components/schemas/OrderStatusEnum'
+        status_label:
+          type: string
+          readOnly: true
+        payment_status:
+          $ref: '#/components/schemas/PaymentStatusEnum'
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        assigned_technician:
+          allOf:
+          - $ref: '#/components/schemas/PersonRef'
+          readOnly: true
+          nullable: true
+        expected_completion_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - assigned_technician
+      - created_at
+      - customer
+      - device_label
+      - id
+      - number
+      - reference
+      - status_label
+      - updated_at
+    OrderStatusEnum:
+      enum:
+      - new
+      - scheduled
+      - diagnosing
+      - awaiting_approval
+      - in_progress
+      - ready_for_pickup
+      - completed
+      - cancelled
+      type: string
+      description: |-
+        * `new` - New
+        * `scheduled` - Scheduled
+        * `diagnosing` - Diagnosing
+        * `awaiting_approval` - Awaiting approval
+        * `in_progress` - In progress
+        * `ready_for_pickup` - Ready for pickup
+        * `completed` - Completed
+        * `cancelled` - Cancelled
+    PaginatedAuditLogList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditLog'
+    PaginatedCustomerList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Customer'
+    PaginatedDeviceList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+    PaginatedInvoiceListList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/InvoiceList'
+    PaginatedNotificationList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Notification'
+    PaginatedOrderListList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderList'
+    PaginatedPartList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Part'
+    PaginatedStockMovementList:
+      type: object
+      required:
+      - count
+      - page
+      - page_size
+      - total_pages
+      - results
+      properties:
+        count:
+          type: integer
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_pages:
+          type: integer
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/StockMovement'
+    Part:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        sku:
+          type: string
+          maxLength: 64
+        name:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        unit:
+          $ref: '#/components/schemas/UnitEnum'
+        purchase_cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        selling_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        low_stock_threshold:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        quantity_on_hand:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        quantity_reserved:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        quantity_available:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          readOnly: true
+        is_low_stock:
+          type: boolean
+          readOnly: true
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - is_low_stock
+      - name
+      - quantity_available
+      - quantity_on_hand
+      - quantity_reserved
+      - sku
+      - updated_at
+    PartRequest:
+      type: object
+      properties:
+        sku:
+          type: string
+          minLength: 1
+          maxLength: 64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        unit:
+          $ref: '#/components/schemas/UnitEnum'
+        purchase_cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        selling_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        low_stock_threshold:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        is_active:
+          type: boolean
+        initial_quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          writeOnly: true
+          description: Opening stock, recorded as a receipt movement.
+      required:
+      - name
+      - sku
+    PasswordResetConfirmRequest:
+      type: object
+      properties:
+        uid:
+          type: string
+          minLength: 1
+          maxLength: 64
+        token:
+          type: string
+          minLength: 1
+          maxLength: 128
+        new_password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - new_password
+      - token
+      - uid
+    PatchedBusinessRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        timezone:
+          type: string
+          minLength: 1
+          maxLength: 64
+        currency:
+          $ref: '#/components/schemas/CurrencyEnum'
+        tax_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        default_labor_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        estimate_valid_days:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone:
+          type: string
+          maxLength: 40
+        address:
+          type: string
+    PatchedCustomerRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        company:
+          type: string
+          maxLength: 150
+        email:
+          oneOf:
+          - type: string
+            format: email
+            maxLength: 254
+          - type: string
+            maxLength: 0
+        phone:
+          type: string
+          maxLength: 40
+        address:
+          type: string
+        customer_notes:
+          type: string
+        marketing_opt_in:
+          type: boolean
+        is_archived:
+          type: boolean
+    PatchedDeviceRequest:
+      type: object
+      properties:
+        customer:
+          type: string
+          format: uuid
+        kind:
+          $ref: '#/components/schemas/DeviceKindEnum'
+        brand:
+          type: string
+          minLength: 1
+          maxLength: 80
+        model:
+          type: string
+          minLength: 1
+          maxLength: 120
+        serial_number:
+          type: string
+          maxLength: 120
+        imei:
+          type: string
+          maxLength: 20
+        color:
+          type: string
+          maxLength: 40
+        notes:
+          type: string
+          description: Internal notes about the device.
+    PatchedOrderUpdateRequest:
+      type: object
+      properties:
+        version:
+          type: integer
+          description: Version the client last saw; a mismatch returns 409.
+        problem_description:
+          type: string
+          minLength: 1
+        priority:
+          $ref: '#/components/schemas/PriorityEnum'
+        assigned_technician:
+          type: string
+          format: uuid
+          nullable: true
+        expected_completion_date:
+          type: string
+          format: date
+          nullable: true
+    PatchedPartRequest:
+      type: object
+      properties:
+        sku:
+          type: string
+          minLength: 1
+          maxLength: 64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        unit:
+          $ref: '#/components/schemas/UnitEnum'
+        purchase_cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        selling_price:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        low_stock_threshold:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        is_active:
+          type: boolean
+        initial_quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          writeOnly: true
+          description: Opening stock, recorded as a receipt movement.
+    PatchedTechnicianAvailabilityRequest:
+      type: object
+      properties:
+        technician:
+          type: string
+          format: uuid
+          nullable: true
+        weekday:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+    PatchedTimeOffRequest:
+      type: object
+      properties:
+        technician:
+          type: string
+          format: uuid
+          nullable: true
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          maxLength: 200
+    PatchedUserRequest:
+      type: object
+      properties:
+        full_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+    Payment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/PaymentKindEnum'
+        method:
+          $ref: '#/components/schemas/MethodEnum'
+        source:
+          $ref: '#/components/schemas/PaymentSourceEnum'
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        received_at:
+          type: string
+          format: date-time
+        reference:
+          type: string
+          maxLength: 120
+        note:
+          type: string
+        refund_of:
+          type: string
+          format: uuid
+          readOnly: true
+          nullable: true
+        recorded_by_name:
+          type: string
+          readOnly: true
+          default: ''
+        refundable:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - amount
+      - created_at
+      - id
+      - kind
+      - method
+      - received_at
+      - recorded_by_name
+      - refund_of
+      - refundable
+    PaymentKindEnum:
+      enum:
+      - payment
+      - refund
+      type: string
+      description: |-
+        * `payment` - Payment
+        * `refund` - Refund
+    PaymentSourceEnum:
+      enum:
+      - recorded
+      - provider
+      type: string
+      description: |-
+        * `recorded` - Recorded by staff
+        * `provider` - Processed by payment provider
+    PaymentStatusEnum:
+      enum:
+      - not_invoiced
+      - unpaid
+      - partially_paid
+      - paid
+      - refunded
+      type: string
+      description: |-
+        * `not_invoiced` - Not invoiced
+        * `unpaid` - Unpaid
+        * `partially_paid` - Partially paid
+        * `paid` - Paid
+        * `refunded` - Refunded
+    PersonRef:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+      required:
+      - id
+      - name
+    Plan:
+      type: object
+      properties:
+        code:
+          type: string
+          maxLength: 40
+          pattern: ^[-a-zA-Z0-9_]+$
+        name:
+          type: string
+          maxLength: 80
+        price_monthly:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,8}(?:\.\d{0,2})?$
+        currency:
+          type: string
+          maxLength: 3
+        max_staff:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+        max_orders_per_month:
+          type: integer
+          maximum: 2147483647
+          minimum: 0
+          nullable: true
+      required:
+      - code
+      - name
+    PlanChoiceRequest:
+      type: object
+      properties:
+        plan:
+          type: string
+          minLength: 1
+      required:
+      - plan
+    PortalAccess:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        full_name:
+          type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - full_name
+      - id
+    PortalAppointment:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_name:
+          type: string
+        kind:
+          type: string
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        status:
+          type: string
+        timezone:
+          type: string
+      required:
+      - business_name
+      - ends_at
+      - id
+      - kind
+      - starts_at
+      - status
+      - timezone
+    PortalCustomer:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        business_name:
+          type: string
+        devices:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+      required:
+      - business_name
+      - devices
+      - full_name
+      - id
+    PortalInviteRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+      required:
+      - email
+    PortalLinkSummary:
+      type: object
+      properties:
+        business_id:
+          type: string
+          format: uuid
+        business_name:
+          type: string
+        customer_id:
+          type: string
+          format: uuid
+        customer_name:
+          type: string
+      required:
+      - business_id
+      - business_name
+      - customer_id
+      - customer_name
+    PortalOrder:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+        business_name:
+          type: string
+        device:
+          type: string
+        problem_description:
+          type: string
+        status:
+          type: string
+        status_label:
+          type: string
+        payment_status:
+          type: string
+        expected_completion_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+      required:
+      - business_name
+      - completed_at
+      - created_at
+      - device
+      - expected_completion_date
+      - id
+      - payment_status
+      - problem_description
+      - reference
+      - status
+      - status_label
+    PortalOrderDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        reference:
+          type: string
+        business_name:
+          type: string
+        device:
+          type: string
+        problem_description:
+          type: string
+        status:
+          type: string
+        status_label:
+          type: string
+        payment_status:
+          type: string
+        expected_completion_date:
+          type: string
+          format: date
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+        completed_at:
+          type: string
+          format: date-time
+          nullable: true
+        timeline:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        attachments:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        estimates:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        invoices:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+      required:
+      - attachments
+      - business_name
+      - completed_at
+      - created_at
+      - device
+      - estimates
+      - expected_completion_date
+      - id
+      - invoices
+      - payment_status
+      - problem_description
+      - reference
+      - status
+      - status_label
+      - timeline
+    PriorityEnum:
+      enum:
+      - low
+      - normal
+      - high
+      - urgent
+      type: string
+      description: |-
+        * `low` - Low
+        * `normal` - Normal
+        * `high` - High
+        * `urgent` - Urgent
+    PublicDecisionRequest:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/DecisionEnum'
+        note:
+          type: string
+          default: ''
+        content_hash:
+          type: string
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+      required:
+      - decision
+      - name
+    PublicEstimate:
+      type: object
+      description: What the customer sees through an approval link or the portal.
+      properties:
+        id:
+          type: string
+          format: uuid
+        business_name:
+          type: string
+        order_reference:
+          type: string
+        device:
+          type: string
+        customer_name:
+          type: string
+        version:
+          type: integer
+        status:
+          type: string
+        notes:
+          type: string
+        currency:
+          type: string
+        tax_rate:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,3}(?:\.\d{0,2})?$
+        subtotal:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        tax_total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        total:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        valid_until:
+          type: string
+          format: date
+        content_hash:
+          type: string
+        decided_at:
+          type: string
+          format: date-time
+        decided_by_name:
+          type: string
+        lines:
+          type: array
+          items:
+            type: object
+            additionalProperties: {}
+          readOnly: true
+        link_state:
+          type: string
+      required:
+      - business_name
+      - content_hash
+      - currency
+      - customer_name
+      - decided_at
+      - decided_by_name
+      - device
+      - id
+      - lines
+      - notes
+      - order_reference
+      - status
+      - subtotal
+      - tax_rate
+      - tax_total
+      - total
+      - valid_until
+      - version
+    ReceiveStockRequest:
+      type: object
+      properties:
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        unit_cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        reason:
+          type: string
+          default: ''
+      required:
+      - quantity
+    RecordPaymentRequest:
+      type: object
+      properties:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        method:
+          $ref: '#/components/schemas/MethodEnum'
+        received_at:
+          type: string
+          format: date-time
+        reference:
+          type: string
+          default: ''
+          maxLength: 120
+        note:
+          type: string
+          default: ''
+        idempotency_key:
+          type: string
+          default: ''
+          maxLength: 80
+      required:
+      - amount
+      - method
+    Redirect:
+      type: object
+      properties:
+        url:
+          type: string
+          format: uri
+      required:
+      - url
+    RefundRequest:
+      type: object
+      properties:
+        amount:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        reason:
+          type: string
+          minLength: 1
+        method:
+          $ref: '#/components/schemas/MethodEnum'
+        idempotency_key:
+          type: string
+          default: ''
+          maxLength: 80
+      required:
+      - amount
+      - reason
+    RegisterRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          minLength: 1
+        full_name:
+          type: string
+          minLength: 1
+          maxLength: 150
+        password:
+          type: string
+          writeOnly: true
+          minLength: 1
+      required:
+      - email
+      - full_name
+      - password
+    RepairRequestRequest:
+      type: object
+      properties:
+        customer:
+          type: string
+          format: uuid
+        device:
+          type: string
+          format: uuid
+          nullable: true
+        device_kind:
+          $ref: '#/components/schemas/DeviceKindEnum'
+        device_brand:
+          type: string
+          maxLength: 80
+        device_model:
+          type: string
+          maxLength: 120
+        device_serial_number:
+          type: string
+          maxLength: 120
+        problem_description:
+          type: string
+          minLength: 1
+          maxLength: 4000
+      required:
+      - customer
+      - problem_description
+    ReplaceLinesRequest:
+      type: object
+      properties:
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/LineInputRequest'
+        notes:
+          type: string
+      required:
+      - lines
+    RescheduleRequest:
+      type: object
+      properties:
+        starts_at:
+          type: string
+          format: date-time
+        duration_minutes:
+          type: integer
+          maximum: 480
+          minimum: 15
+        technician:
+          type: string
+          format: uuid
+          nullable: true
+      required:
+      - duration_minutes
+      - starts_at
+    Reservation:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        order:
+          type: string
+          format: uuid
+          readOnly: true
+        part:
+          type: string
+          format: uuid
+          readOnly: true
+        part_name:
+          type: string
+          readOnly: true
+        sku:
+          type: string
+          readOnly: true
+        unit:
+          type: string
+          readOnly: true
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        status:
+          $ref: '#/components/schemas/ReservationStatusEnum'
+        consumed_at:
+          type: string
+          format: date-time
+          nullable: true
+        released_at:
+          type: string
+          format: date-time
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - order
+      - part
+      - part_name
+      - quantity
+      - sku
+      - unit
+    ReservationStatusEnum:
+      enum:
+      - active
+      - consumed
+      - released
+      type: string
+      description: |-
+        * `active` - Reserved
+        * `consumed` - Consumed
+        * `released` - Released
+    ReserveRequest:
+      type: object
+      properties:
+        order:
+          type: string
+          format: uuid
+        part:
+          type: string
+          format: uuid
+        quantity:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        idempotency_key:
+          type: string
+          minLength: 1
+          maxLength: 80
+      required:
+      - idempotency_key
+      - order
+      - part
+      - quantity
+    RevokePortalRequest:
+      type: object
+      properties:
+        access_id:
+          type: integer
+      required:
+      - access_id
+    RoleEnum:
+      enum:
+      - owner
+      - manager
+      - technician
+      type: string
+      description: |-
+        * `owner` - Owner
+        * `manager` - Manager
+        * `technician` - Technician
+    Session:
+      type: object
+      properties:
+        authenticated:
+          type: boolean
+        user:
+          allOf:
+          - $ref: '#/components/schemas/User'
+          nullable: true
+        memberships:
+          type: array
+          items:
+            $ref: '#/components/schemas/MembershipSummary'
+        portal_links:
+          type: array
+          items:
+            $ref: '#/components/schemas/PortalLinkSummary'
+        active_workspace:
+          allOf:
+          - $ref: '#/components/schemas/ActiveWorkspace'
+          nullable: true
+      required:
+      - active_workspace
+      - authenticated
+      - memberships
+      - portal_links
+      - user
+    StaffDecisionRequest:
+      type: object
+      properties:
+        decision:
+          $ref: '#/components/schemas/DecisionEnum'
+        note:
+          type: string
+          default: ''
+        content_hash:
+          type: string
+        customer_name:
+          type: string
+          minLength: 1
+          description: Who gave the decision, e.g. by phone.
+          maxLength: 200
+      required:
+      - customer_name
+      - decision
+    StaffOption:
+      type: object
+      description: Minimal staff record used to pick a technician.
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        full_name:
+          type: string
+        role:
+          type: string
+      required:
+      - full_name
+      - role
+      - user_id
+    StockMovement:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        part:
+          type: string
+          format: uuid
+          readOnly: true
+        part_name:
+          type: string
+          readOnly: true
+        sku:
+          type: string
+          readOnly: true
+        kind:
+          $ref: '#/components/schemas/MovementKindEnum'
+        on_hand_delta:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        reserved_delta:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        on_hand_after:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        reserved_after:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+        unit_cost:
+          type: string
+          format: decimal
+          pattern: ^-?\d{0,10}(?:\.\d{0,2})?$
+          nullable: true
+        order_reference:
+          type: string
+          readOnly: true
+        reason:
+          type: string
+          maxLength: 255
+        actor_name:
+          type: string
+          readOnly: true
+          default: ''
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - actor_name
+      - created_at
+      - id
+      - kind
+      - on_hand_after
+      - order_reference
+      - part
+      - part_name
+      - reserved_after
+      - sku
+    SubscriptionState:
+      type: object
+      properties:
+        provider:
+          type: string
+        provider_label:
+          type: string
+        status:
+          type: string
+        plan:
+          $ref: '#/components/schemas/Plan'
+        trial_ends_at:
+          type: string
+          format: date-time
+          nullable: true
+        current_period_end:
+          type: string
+          format: date-time
+          nullable: true
+        cancel_at_period_end:
+          type: boolean
+        past_due_since:
+          type: string
+          format: date-time
+          nullable: true
+        can_write:
+          type: boolean
+        read_only_reason:
+          type: string
+        usage:
+          type: object
+          additionalProperties: {}
+        plans:
+          type: array
+          items:
+            $ref: '#/components/schemas/Plan'
+      required:
+      - can_write
+      - cancel_at_period_end
+      - current_period_end
+      - past_due_since
+      - plan
+      - plans
+      - provider
+      - provider_label
+      - read_only_reason
+      - status
+      - trial_ends_at
+      - usage
+    SwitchWorkspaceRequest:
+      type: object
+      properties:
+        business_id:
+          type: string
+          format: uuid
+      required:
+      - business_id
+    TechnicianAvailability:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        technician:
+          type: string
+          format: uuid
+          nullable: true
+        technician_name:
+          type: string
+          readOnly: true
+        weekday:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+      required:
+      - end_time
+      - id
+      - start_time
+      - technician
+      - technician_name
+      - weekday
+    TechnicianAvailabilityRequest:
+      type: object
+      properties:
+        technician:
+          type: string
+          format: uuid
+          nullable: true
+        weekday:
+          type: integer
+          maximum: 32767
+          minimum: 0
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+      required:
+      - end_time
+      - start_time
+      - technician
+      - weekday
+    TimeOff:
+      type: object
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        technician:
+          type: string
+          format: uuid
+          nullable: true
+        technician_name:
+          type: string
+          readOnly: true
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          maxLength: 200
+      required:
+      - ends_at
+      - id
+      - starts_at
+      - technician
+      - technician_name
+    TimeOffRequest:
+      type: object
+      properties:
+        technician:
+          type: string
+          format: uuid
+          nullable: true
+        starts_at:
+          type: string
+          format: date-time
+        ends_at:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          maxLength: 200
+      required:
+      - ends_at
+      - starts_at
+      - technician
+    TokenRequest:
+      type: object
+      properties:
+        token:
+          type: string
+          minLength: 1
+          maxLength: 500
+      required:
+      - token
+    TransitionRequest:
+      type: object
+      properties:
+        to_status:
+          $ref: '#/components/schemas/OrderStatusEnum'
+        reason:
+          type: string
+          default: ''
+      required:
+      - to_status
+    UnitEnum:
+      enum:
+      - piece
+      - set
+      - meter
+      - ml
+      - gram
+      type: string
+      description: |-
+        * `piece` - Piece
+        * `set` - Set
+        * `meter` - Meter
+        * `ml` - Milliliter
+        * `gram` - Gram
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        email:
+          type: string
+          format: email
+          readOnly: true
+        full_name:
+          type: string
+          maxLength: 150
+        email_verified:
+          type: boolean
+          readOnly: true
+      required:
+      - email
+      - email_verified
+      - full_name
+      - id
+    VoidRequest:
+      type: object
+      properties:
+        reason:
+          type: string
+          minLength: 1
+      required:
+      - reason
+    Workspace:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        role:
+          type: string
+      required:
+      - id
+      - name
+      - role
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: sessionid
