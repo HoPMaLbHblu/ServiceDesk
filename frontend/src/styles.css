@@ -1,0 +1,47 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --color-brand-50: #eff6ff;
+  --color-brand-100: #dbeafe;
+  --color-brand-600: #1d4ed8;
+  --color-brand-700: #1e40af;
+  --color-brand-800: #1e3a8a;
+}
+
+@layer base {
+  html {
+    @apply h-full bg-slate-50 text-slate-900 antialiased;
+  }
+  body {
+    @apply h-full;
+  }
+  /* One clearly visible focus style for every interactive element. */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-brand-600;
+  }
+}
+
+@layer components {
+  .field-label {
+    @apply mb-1 block text-sm font-medium text-slate-700;
+  }
+  .field-input {
+    @apply block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 shadow-xs placeholder:text-slate-400 focus:border-brand-600 focus:outline-none focus:ring-2 focus:ring-brand-600/30 disabled:cursor-not-allowed disabled:bg-slate-100;
+  }
+  .field-input[aria-invalid="true"] {
+    @apply border-red-500 focus:border-red-600 focus:ring-red-600/30;
+  }
+  .card {
+    @apply rounded-lg border border-slate-200 bg-white shadow-xs;
+  }
+  .table-base {
+    @apply min-w-full divide-y divide-slate-200 text-sm;
+  }
+  .table-base th {
+    @apply bg-slate-50 px-3 py-2 text-left text-xs font-semibold tracking-wide text-slate-600 uppercase;
+  }
+  .table-base td {
+    @apply px-3 py-2.5 align-top;
+  }
+}
