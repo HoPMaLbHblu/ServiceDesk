@@ -51,3 +51,63 @@ export interface Paginated<T> {
   total_pages: number
   results: T[]
 }
+
+// Shapes the backend returns as free-form objects (documented in the API, not typed by the schema).
+export interface PortalDevice {
+  id: string
+  label: string
+}
+
+export interface PortalEvent {
+  kind: string
+  message: string
+  created_at: string
+}
+
+export interface PortalAttachment {
+  id: string
+  original_name: string
+  content_type: string
+  caption: string
+  created_at: string
+}
+
+export interface PublicEstimateLine {
+  kind: string
+  description: string
+  quantity: string
+  unit_price: string
+  line_total: string
+  taxable: boolean
+}
+
+export interface PortalInvoice {
+  id: string
+  reference: string
+  currency: string
+  total: string
+  amount_paid: string
+  balance_due: string
+  issued_at: string
+  due_date: string | null
+}
+
+export interface DashboardReport {
+  period: { start: string; end: string; timezone: string }
+  currency: string
+  collected: { gross: string; refunds: string; net: string; series: { date: string; amount: string }[] }
+  outstanding: { balance: string; count: number; overdue_balance: string; overdue_count: number }
+  orders_by_status: { status: string; label: string; count: number }[]
+  turnaround: { count: number; average_hours: number | null; median_hours: number | null }
+  technician_workload: {
+    user_id: string
+    name: string
+    role: string
+    open_orders: number
+    completed_in_period: number
+    booked_hours_next_7_days: number
+  }[]
+  top_parts: { part_id: string; sku: string; name: string; quantity_used: string; orders: number }[]
+  low_stock: { part_id: string; sku: string; name: string; available: string; threshold: string }[]
+  definitions: Record<string, string>
+}
