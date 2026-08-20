@@ -225,6 +225,9 @@ STRIPE_WEBHOOK_SECRET = env("STRIPE_WEBHOOK_SECRET", "")
 BILLING_TRIAL_DAYS = env_int("BILLING_TRIAL_DAYS", 14)
 BILLING_PAST_DUE_GRACE_DAYS = env_int("BILLING_PAST_DUE_GRACE_DAYS", 7)
 
+# The seed_demo command refuses to run outside DEBUG unless this is set (e.g. a public demo server).
+ALLOW_DEMO_DATA = env_bool("ALLOW_DEMO_DATA", False)
+
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
