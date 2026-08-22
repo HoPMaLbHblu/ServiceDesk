@@ -5,7 +5,7 @@
       ServiceDesk
     </RouterLink>
     <main class="w-full max-w-md">
-      <RouterView />
+      <slot />
     </main>
   </div>
 </template>

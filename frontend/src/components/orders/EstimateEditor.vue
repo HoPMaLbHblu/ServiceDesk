@@ -46,7 +46,7 @@ function add(kind: DraftLine['kind']) {
   lines.push({
     kind,
     part: null,
-    description: kind === 'labor' ? 'Labour' : '',
+    description: kind === 'labor' ? 'Labor' : '',
     quantity: '1',
     unit_price: kind === 'labor' ? (business.data.value?.default_labor_rate ?? '0.00') : '0.00',
     taxable: true,
@@ -144,7 +144,7 @@ async function onSend() {
     </div>
     <p v-if="!lines.length" class="text-sm text-slate-500">Add labour, parts or fees.</p>
     <div class="flex flex-wrap gap-2">
-      <AppButton size="sm" variant="secondary" @click="add('labor')">+ Labour</AppButton>
+      <AppButton size="sm" variant="secondary" @click="add('labor')">+ Labor</AppButton>
       <AppButton size="sm" variant="secondary" @click="add('part')">+ Part</AppButton>
       <AppButton size="sm" variant="secondary" @click="add('fee')">+ Fee</AppButton>
     </div>

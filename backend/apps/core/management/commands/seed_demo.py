@@ -406,7 +406,7 @@ class Command(BaseCommand):
                 if kind == "part"
                 else {
                     "kind": "labor",
-                    "description": "Labour",
+                    "description": "Labor",
                     "quantity": Decimal(qty),
                     "unit_price": order.business.default_labor_rate,
                 }

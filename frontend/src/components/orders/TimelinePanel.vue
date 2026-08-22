@@ -47,7 +47,7 @@ async function addNote() {
         <p class="text-xs text-slate-500">
           {{ e.actor_label || 'System' }} · {{ dateTime(e.created_at) }}
           <span v-if="e.kind === 'internal_note'" class="ml-1 rounded bg-slate-100 px-1">internal</span>
-          <span v-else-if="e.visible_to_customer" class="ml-1 rounded bg-brand-50 px-1 text-brand-700">customer sees</span>
+          <span v-else-if="e.visible_to_customer" class="ml-1 rounded bg-brand-50 px-1 whitespace-nowrap text-brand-700">customer sees</span>
         </p>
       </li>
     </ol>

@@ -109,7 +109,7 @@ async function saveHours() {
           <SelectField v-model="form.values.timezone" label="Timezone" :options="zones" :error="form.fieldError('timezone')" />
           <SelectField v-model="form.values.currency" label="Currency" :options="currencies" :error="form.fieldError('currency')" />
           <TextField v-model="form.values.tax_rate" label="Tax rate (%)" inputmode="decimal" :error="form.fieldError('tax_rate')" hint="Applies to new estimates. Sent estimates and issued invoices keep their rate." />
-          <TextField v-model="form.values.default_labor_rate" label="Default labour rate per hour" inputmode="decimal" :error="form.fieldError('default_labor_rate')" />
+          <TextField v-model="form.values.default_labor_rate" label="Default labor rate per hour" inputmode="decimal" :error="form.fieldError('default_labor_rate')" />
           <TextField v-model.number="form.values.estimate_valid_days" label="Estimates valid for (days)" type="number" :error="form.fieldError('estimate_valid_days')" />
           <TextField v-model="form.values.phone" label="Phone" type="tel" :error="form.fieldError('phone')" />
           <TextField v-model="form.values.email" label="Email shown to customers" type="email" :error="form.fieldError('email')" />

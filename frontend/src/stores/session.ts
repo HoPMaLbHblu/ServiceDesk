@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 
 import { api } from '@/api/client'
 import type { Session } from '@/api/types'
+import { lastWorkspaceFor, rememberWorkspace } from '@/lib/preferences'
 import { queryClient } from '@/lib/queryClient'
 
 const EMPTY: Session = { authenticated: false, user: null, memberships: [], portal_links: [], active_workspace: null }
@@ -35,6 +36,24 @@ export const useSessionStore = defineStore('session', () => {
     const workspaceChanged = (next.active_workspace?.id ?? null) !== previousWorkspace
     if (userChanged || workspaceChanged) queryClient.clear()
     if (next.authenticated) expired.value = false
+    if (next.user && next.active_workspace) rememberWorkspace(next.user.id, next.active_workspace.id)
+  }
+
+  /**
+   * After sign-in with several workspaces and none active, reopen the one used
+   * last on this browser. The server still checks the membership.
+   */
+  async function reopenLastWorkspace() {
+    const s = session.value
+    if (!s.user || s.active_workspace) return
+    const last = lastWorkspaceFor(s.user.id)
+    if (last && s.memberships.some((m) => m.business_id === last)) {
+      try {
+        await switchWorkspace(last)
+      } catch {
+        // Membership changed since; the user picks a workspace instead.
+      }
+    }
   }
 
   async function restore() {
@@ -47,6 +66,7 @@ export const useSessionStore = defineStore('session', () => {
 
   async function login(email: string, password: string) {
     apply(await api.post<Session>('/auth/login/', { email, password }))
+    await reopenLastWorkspace()
   }
 
   async function register(payload: { email: string; full_name: string; password: string }) {

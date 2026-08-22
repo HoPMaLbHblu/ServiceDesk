@@ -24,6 +24,6 @@ async function logout() {
         </div>
       </div>
     </header>
-    <main class="mx-auto max-w-4xl px-4 py-6"><RouterView /></main>
+    <main class="mx-auto max-w-4xl px-4 py-6"><slot /></main>
   </div>
 </template>

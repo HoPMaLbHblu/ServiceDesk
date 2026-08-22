@@ -58,7 +58,7 @@ async function onSubmit() {
         <TextField v-model="form.values.model" label="Model" required :error="form.fieldError('model')" />
         <TextField v-model="form.values.serial_number" label="Serial number" :error="form.fieldError('serial_number')" />
         <TextField v-model="form.values.imei" label="IMEI" :error="form.fieldError('imei')" />
-        <TextField v-model="form.values.color" label="Colour" :error="form.fieldError('color')" />
+        <TextField v-model="form.values.color" label="Color" :error="form.fieldError('color')" />
       </div>
       <TextField v-model="form.values.notes" label="Condition notes" :error="form.fieldError('notes')" />
     </form>

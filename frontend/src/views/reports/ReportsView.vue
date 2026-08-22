@@ -80,7 +80,7 @@ async function exportCsv(dataset: string) {
         <div class="card p-4">
           <p class="text-xs text-slate-500" :title="r.definitions.outstanding">Outstanding now ⓘ</p>
           <p class="mt-1 text-2xl font-semibold">{{ money(r.outstanding.balance, r.currency) }}</p>
-          <p class="text-xs text-slate-500">{{ r.outstanding.count }} invoices · {{ money(r.outstanding.overdue_balance, r.currency) }} overdue</p>
+          <p class="text-xs text-slate-500">{{ r.outstanding.count }} invoice{{ r.outstanding.count === 1 ? '' : 's' }} · {{ money(r.outstanding.overdue_balance, r.currency) }} overdue</p>
         </div>
         <div class="card p-4">
           <p class="text-xs text-slate-500" :title="r.definitions.turnaround">Turnaround ⓘ</p>

@@ -86,8 +86,7 @@ async function logout() {
     <div class="min-w-0 flex-1">
       <WorkspaceBanners />
       <main id="main" class="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-        <!-- Keyed by workspace so no component state survives a switch. -->
-        <RouterView :key="session.workspaceId ?? 'none'" />
+        <slot />
       </main>
     </div>
   </div>
