@@ -142,7 +142,7 @@ async function onSend() {
         <button type="button" class="mt-1.5 rounded p-1 text-slate-500 hover:bg-slate-100 hover:text-red-700" :aria-label="`Remove line ${index + 1}`" @click="lines.splice(index, 1)">✕</button>
       </div>
     </div>
-    <p v-if="!lines.length" class="text-sm text-slate-500">Add labour, parts or fees.</p>
+    <p v-if="!lines.length" class="text-sm text-slate-500">Add labor, parts or fees.</p>
     <div class="flex flex-wrap gap-2">
       <AppButton size="sm" variant="secondary" @click="add('labor')">+ Labor</AppButton>
       <AppButton size="sm" variant="secondary" @click="add('part')">+ Part</AppButton>

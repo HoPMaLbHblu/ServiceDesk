@@ -26,3 +26,4 @@ backups/
 .vscode/
 .DS_Store
 backend/.test-media/
+backend/celerybeat-schedule*
