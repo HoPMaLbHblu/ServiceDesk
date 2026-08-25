@@ -13,9 +13,10 @@ export function useApiForm<T extends Record<string, unknown>>(initial: T) {
   const errors = ref<Record<string, string[]>>({})
   const generalError = ref<string | null>(null)
   const submitting = ref(false)
-  let snapshot = JSON.stringify(initial)
+  const snapshot = ref(JSON.stringify(initial))
 
-  const dirty = computed(() => JSON.stringify(toRaw(values)) !== snapshot)
+  // Stringify the reactive object (not toRaw) so the computed tracks every field.
+  const dirty = computed(() => JSON.stringify(values) !== snapshot.value)
 
   function fieldError(name: string): string | undefined {
     return errors.value[name]?.[0]
@@ -28,12 +29,12 @@ export function useApiForm<T extends Record<string, unknown>>(initial: T) {
 
   function reset(next: T = initial) {
     Object.assign(values, next)
-    snapshot = JSON.stringify(next)
+    snapshot.value = JSON.stringify(next)
     clearErrors()
   }
 
   function markSaved() {
-    snapshot = JSON.stringify(toRaw(values))
+    snapshot.value = JSON.stringify(values)
   }
 
   async function submit<R>(action: (data: T) => Promise<R>): Promise<R | undefined> {
