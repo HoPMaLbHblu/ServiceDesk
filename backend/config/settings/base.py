@@ -189,6 +189,8 @@ EMAIL_HOST_USER = env("EMAIL_HOST_USER", "")
 EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD", "")
 EMAIL_USE_TLS = env_bool("EMAIL_USE_TLS", False)
 EMAIL_TIMEOUT = env_int("EMAIL_TIMEOUT", 15)
+# Used with the file-based backend (end-to-end tests read emails from here).
+EMAIL_FILE_PATH = env("EMAIL_FILE_PATH", str(BASE_DIR / "sent-emails"))
 DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL", "ServiceDesk <no-reply@servicedesk.local>")
 
 # Tokens
