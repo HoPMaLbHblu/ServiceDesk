@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import { createRouter, createWebHistory, type RouteLocationNormalized, type RouteRecordRaw } from 'vue-router'
 
 import type { Role } from '@/api/types'
 import { useSessionStore } from '@/stores/session'
@@ -68,11 +68,19 @@ const routes: RouteRecordRaw[] = [
   { path: '/:pathMatch(.*)*', name: 'not-found', component: () => import('@/views/NotFoundView.vue'), meta: { layout: 'bare', public: true, title: 'Not found' } },
 ]
 
-export const router = createRouter({
-  history: createWebHistory(),
-  routes,
-  scrollBehavior: (_to, _from, saved) => saved ?? { top: 0 },
-})
+/** A new router instance. Tests create their own so each mounted app gets a fresh one. */
+export function createAppRouter() {
+  const router = createRouter({
+    history: createWebHistory(),
+    routes,
+    scrollBehavior: (_to, _from, saved) => saved ?? { top: 0 },
+  })
+  router.beforeEach(guard)
+  router.afterEach((to) => {
+    document.title = to.meta.title ? `${to.meta.title} · ServiceDesk` : 'ServiceDesk'
+  })
+  return router
+}
 
 /** Where a signed-in user belongs when no specific page was requested. */
 export function homeFor(session: ReturnType<typeof useSessionStore>) {
@@ -81,7 +89,7 @@ export function homeFor(session: ReturnType<typeof useSessionStore>) {
   return { name: 'welcome' }
 }
 
-router.beforeEach(async (to) => {
+async function guard(to: RouteLocationNormalized) {
   const session = useSessionStore()
   if (!session.restored) {
     try {
@@ -110,8 +118,7 @@ router.beforeEach(async (to) => {
     if (roles && !roles.includes(session.role as Role)) return { name: 'forbidden' }
   }
   return true
-})
+}
 
-router.afterEach((to) => {
-  document.title = to.meta.title ? `${to.meta.title} · ServiceDesk` : 'ServiceDesk'
-})
+export const router = createAppRouter()
+

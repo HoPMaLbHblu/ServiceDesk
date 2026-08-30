@@ -12,6 +12,7 @@ export default mergeConfig(
       include: ['src/**/*.spec.ts'],
       root: fileURLToPath(new URL('./', import.meta.url)),
       restoreMocks: true,
+      setupFiles: ['src/test/setup.ts'],
     },
   }),
 )
