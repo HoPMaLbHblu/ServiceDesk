@@ -1,0 +1,80 @@
+# Development stack: docker compose up
+# App: http://localhost:5173  ·  Mailpit: http://localhost:8025  ·  API docs: http://localhost:5173/api/docs/
+
+x-backend: &backend
+  build:
+    context: .
+    dockerfile: infrastructure/docker/backend.Dockerfile
+    target: dev
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    DJANGO_SETTINGS_MODULE: config.settings.dev
+    POSTGRES_HOST: postgres
+    REDIS_URL: redis://redis:6379/0
+    CACHE_REDIS_URL: redis://redis:6379/1
+    EMAIL_HOST: mailpit
+    EMAIL_PORT: "1025"
+    FRONTEND_URL: http://localhost:5173
+  volumes:
+    - ./backend:/app
+    - media:/data/media
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-servicedesk}
+      POSTGRES_USER: ${POSTGRES_USER:-servicedesk}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-servicedesk}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      retries: 10
+
+  web:
+    <<: *backend
+    command: sh -c "python manage.py migrate --noinput && python manage.py runserver 0.0.0.0:8000"
+    ports: ["8000:8000"]
+
+  worker:
+    <<: *backend
+    command: celery -A config worker -l info --concurrency 2
+
+  scheduler:
+    <<: *backend
+    command: celery -A config beat -l info --schedule /tmp/celerybeat-schedule
+
+  mailpit:
+    image: axllent/mailpit:v1.21
+    ports: ["8025:8025"]
+
+  frontend:
+    build:
+      context: .
+      dockerfile: infrastructure/docker/frontend.Dockerfile
+      target: dev
+    environment:
+      VITE_DEV_BACKEND_URL: http://web:8000
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    ports: ["5173:5173"]
+    depends_on: [web]
+
+volumes:
+  pgdata:
+  media:
