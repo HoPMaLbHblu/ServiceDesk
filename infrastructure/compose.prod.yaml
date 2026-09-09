@@ -1,0 +1,79 @@
+# Production-like stack: docker compose -f infrastructure/compose.prod.yaml --env-file .env up -d --build
+# Put a TLS-terminating proxy in front of port 80 that sets X-Forwarded-Proto.
+
+x-backend: &backend
+  build:
+    context: ..
+    dockerfile: infrastructure/docker/backend.Dockerfile
+    target: prod
+  restart: unless-stopped
+  env_file: ../.env
+  environment:
+    POSTGRES_HOST: postgres
+    REDIS_URL: redis://redis:6379/0
+    CACHE_REDIS_URL: redis://redis:6379/1
+  volumes:
+    - media:/data/media
+  depends_on:
+    postgres: { condition: service_healthy }
+    redis: { condition: service_healthy }
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER:?set POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes: [redisdata:/data]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      retries: 10
+
+  migrate:
+    <<: *backend
+    restart: "no"
+    command: python manage.py migrate --noinput
+
+  web:
+    <<: *backend
+    depends_on:
+      migrate: { condition: service_completed_successfully }
+
+  worker:
+    <<: *backend
+    command: celery -A config worker -l info --concurrency 4
+    healthcheck:
+      disable: true
+
+  scheduler:
+    <<: *backend
+    command: celery -A config beat -l info --schedule /tmp/celerybeat-schedule
+    healthcheck:
+      disable: true
+
+  nginx:
+    build:
+      context: ..
+      dockerfile: infrastructure/docker/frontend.Dockerfile
+      target: prod
+    restart: unless-stopped
+    ports: ["${HTTP_PORT:-80}:80"]
+    depends_on: [web]
+
+volumes:
+  pgdata:
+  redisdata:
+  media:
