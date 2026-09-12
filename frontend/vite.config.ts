@@ -24,7 +24,8 @@ export default defineConfig({
     },
   },
   build: {
-    sourcemap: true,
+    // Off by default so production does not ship source; set VITE_SOURCEMAP=true to debug a build.
+    sourcemap: process.env.VITE_SOURCEMAP === 'true',
     target: 'es2022',
   },
 })
