@@ -27,3 +27,5 @@ backups/
 .DS_Store
 backend/.test-media/
 backend/celerybeat-schedule*
+
+backend/.e2e-emails/
