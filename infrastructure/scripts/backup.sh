@@ -2,7 +2,7 @@
 # Back up the database and uploaded files of the production compose stack.
 # Usage: infrastructure/scripts/backup.sh [backup-dir]
 set -eu
-COMPOSE="docker compose -f infrastructure/compose.prod.yaml --env-file .env"
+COMPOSE="${COMPOSE:-docker compose -f infrastructure/compose.prod.yaml --env-file .env}"
 DIR="${1:-backups}/$(date -u +%Y%m%dT%H%M%SZ)"
 mkdir -p "$DIR"
 
@@ -11,5 +11,5 @@ $COMPOSE exec -T postgres sh -c 'pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" -
 # Private attachments (photos, PDFs).
 $COMPOSE exec -T web tar -C /data -czf - media > "$DIR/media.tar.gz"
 
-sha256sum "$DIR"/* > "$DIR/SHA256SUMS"
+(cd "$DIR" && sha256sum database.dump media.tar.gz > SHA256SUMS)
 echo "Backup written to $DIR"

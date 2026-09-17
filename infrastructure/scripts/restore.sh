@@ -3,7 +3,7 @@
 # Usage: infrastructure/scripts/restore.sh backups/20260101T000000Z
 set -eu
 DIR="${1:?usage: restore.sh <backup-dir>}"
-COMPOSE="docker compose -f infrastructure/compose.prod.yaml --env-file .env"
+COMPOSE="${COMPOSE:-docker compose -f infrastructure/compose.prod.yaml --env-file .env}"
 (cd "$DIR" && sha256sum -c SHA256SUMS)
 
 printf 'This replaces the database and uploaded files with %s. Type "restore" to continue: ' "$DIR"
