@@ -156,6 +156,38 @@ def test_login_is_rate_limited(shop, monkeypatch):
     cache.clear()
 
 
+def test_rate_limits_cannot_be_dodged_with_a_forged_forwarded_for(monkeypatch):
+    """nginx appends the real client address; anything the client put before it is ignored."""
+    from rest_framework.throttling import SimpleRateThrottle
+
+    monkeypatch.setattr(
+        SimpleRateThrottle,
+        "THROTTLE_RATES",
+        {**SimpleRateThrottle.THROTTLE_RATES, "register": "2/min"},
+    )
+    cache.clear()
+    # A fresh client each time: registering signs in, and signed-in requests are keyed by user.
+    codes = [
+        APIClient()
+        .post(
+            "/api/v1/auth/register/",
+            {"email": f"p{n}@example.com", "full_name": "P", "password": PASSWORD},
+            HTTP_X_FORWARDED_FOR=f"10.0.0.{n}, 198.51.100.7",
+        )
+        .status_code
+        for n in range(3)
+    ]
+    assert codes == [201, 201, 429]
+    # A different real client is counted separately.
+    response = APIClient().post(
+        "/api/v1/auth/register/",
+        {"email": "other@example.com", "full_name": "O", "password": PASSWORD},
+        HTTP_X_FORWARDED_FOR="198.51.100.8",
+    )
+    assert response.status_code == 201
+    cache.clear()
+
+
 def test_change_password_requires_current_password(shop):
     client = shop.client("owner")
     response = client.post(

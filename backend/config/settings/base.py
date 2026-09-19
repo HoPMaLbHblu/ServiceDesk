@@ -154,6 +154,10 @@ REST_FRAMEWORK = {
         "public_token": env("THROTTLE_PUBLIC_TOKEN", "30/min"),
     },
     "TEST_REQUEST_DEFAULT_FORMAT": "json",
+    # Proxies in front of Django that append to X-Forwarded-For (nginx, or the Vite dev proxy).
+    # Rate limits key on the address the outermost trusted proxy saw; anything the client sent
+    # before it is ignored. Set to 2 when a TLS proxy sits in front of nginx.
+    "NUM_PROXIES": env_int("TRUSTED_PROXY_COUNT", 1),
 }
 
 SPECTACULAR_SETTINGS = {
