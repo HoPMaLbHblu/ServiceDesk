@@ -167,7 +167,12 @@ class OrderViewSet(
         request={"multipart/form-data": AttachmentUploadSerializer},
         responses={201: AttachmentSerializer},
     )
-    @action(detail=True, methods=["get", "post"], parser_classes=[MultiPartParser, FormParser], pagination_class=None)
+    @action(
+        detail=True,
+        methods=["get", "post"],
+        parser_classes=[MultiPartParser, FormParser],
+        pagination_class=None,
+    )
     def attachments(self, request, public_id=None):
         order = self.get_object()
         if request.method == "POST":
