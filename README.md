@@ -20,38 +20,69 @@ It is a Django REST API (`backend/`) and a Vue 3 single-page app (`frontend/`), 
 
 Roles are owner, manager and technician, plus customer portal users. The full matrix is in [docs/permissions.md](docs/permissions.md).
 
-## Quick start with Docker
+## Run it in 3 steps
+
+**1. Install [Docker Desktop](https://www.docker.com/products/docker-desktop/)** and open it. Wait until it says *Engine running*.
+
+**2. Copy and paste this** into a terminal (on Windows: PowerShell; on Mac: Terminal):
 
 ```sh
-cp .env.example .env          # the defaults work for local development
-docker compose up --build
-docker compose exec web python manage.py seed_demo
+git clone https://github.com/HoPMaLbHblu/ServiceDesk.git
+cd ServiceDesk
+docker compose up --build -d
+docker compose exec web sh -c "until python manage.py seed_demo; do sleep 3; done"
 ```
+
+The first run downloads and builds everything, which takes a few minutes. The last line fills the app with demo data; if it prints a few errors first, that is fine, it retries until the database is ready.
+
+**3. Open http://localhost:5173** and sign in:
+
+- Email: `owner@demo.servicedesk.test`
+- Password: `demo-pass-2024!`
+
+That's it.
+
+### Stop it / start it again
+
+```sh
+docker compose down      # stop
+docker compose up -d     # start again (your data is kept)
+```
+
+### Something went wrong?
+
+| Problem | Fix |
+| --- | --- |
+| `docker: command not found` or `cannot connect to the Docker daemon` | Docker Desktop isn't open. Open it, wait for *Engine running*, run the commands again. |
+| `port is already allocated` / `ports are not available` | Another program uses that port. Close it, or restart the computer, then run `docker compose up -d`. |
+| The page doesn't load | Wait 30 seconds and refresh; the app is still starting. |
+| Start completely fresh | `docker compose down -v`, then repeat step 2 from `docker compose up --build -d`. |
+
+### Other places to look
 
 | URL | What |
 | --- | --- |
-| http://localhost:5173 | The app (Vite dev server, proxies `/api` to Django) |
-| http://localhost:5173/api/docs/ | OpenAPI documentation (Swagger UI) |
-| http://localhost:8025 | Mailpit, which catches every email the app sends |
-
-The stack has Postgres 16, Redis 7, Django, a Celery worker, a single Celery beat scheduler, Mailpit and the Vite dev server.
+| http://localhost:5173 | The app |
+| http://localhost:8025 | Mailpit: every email the app "sends" lands here (estimate links, password resets) |
+| http://localhost:5173/api/docs/ | API documentation |
 
 ## Demo accounts
 
-`seed_demo` creates two businesses and an account for each role. Every password is `demo-pass-2024!`.
+Every password is `demo-pass-2024!`.
 
-| Email | Role |
+| Email | What you see |
 | --- | --- |
-| `owner@demo.servicedesk.test` | Owner of Fix-It Electronics, and manager at Beta Gadget Clinic |
-| `manager@demo.servicedesk.test` | Manager at Fix-It Electronics |
-| `tech@demo.servicedesk.test` | Technician at Fix-It Electronics |
-| `tech2@demo.servicedesk.test` | Second technician at Fix-It Electronics |
-| `customer@demo.servicedesk.test` | Customer portal user, linked to the customer Chris Customer |
-| `owner.b@demo.servicedesk.test` | Owner of Beta Gadget Clinic |
+| `owner@demo.servicedesk.test` | Shop owner: everything, including reports and billing |
+| `manager@demo.servicedesk.test` | Manager |
+| `tech@demo.servicedesk.test` | Technician: only the repair work |
+| `customer@demo.servicedesk.test` | A customer: the portal where they follow and approve repairs |
+| `owner.b@demo.servicedesk.test` | Owner of a second, separate shop |
 
-Fix-It Electronics (London, GBP, 20% VAT) has orders in every state: completed and paid, awaiting approval, in progress with a part reserved, ready for pickup with a deposit, scheduled, cancelled, and a request sent from the portal. Beta Gadget Clinic (New York, USD) exists to show that workspaces are isolated.
+The demo shop, Fix-It Electronics, already has repair orders in every state, stock, invoices and appointments. Beta Gadget Clinic is a second shop that shows workspaces are kept apart. Running `seed_demo` again is safe.
 
-The command is idempotent. It refuses to run unless `DEBUG` is on or `ALLOW_DEMO_DATA=true` is set.
+---
+
+# Developer guide
 
 ## Running without Docker
 
