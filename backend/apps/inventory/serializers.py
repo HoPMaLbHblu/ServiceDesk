@@ -43,6 +43,11 @@ class PartSerializer(serializers.ModelSerializer):
         ]
         # Stock levels change only through receipts, adjustments, reservations and consumption.
         read_only_fields = ["quantity_on_hand", "quantity_reserved", "created_at", "updated_at"]
+        extra_kwargs = {
+            "purchase_cost": {"min_value": 0},
+            "selling_price": {"min_value": 0},
+            "low_stock_threshold": {"min_value": 0},
+        }
 
     def validate_sku(self, value):
         value = value.strip().upper()

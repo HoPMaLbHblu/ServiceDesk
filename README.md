@@ -145,4 +145,5 @@ compose.yaml      Development stack
 - [Permissions](docs/permissions.md): what each role can do.
 - [Operations](docs/operations.md): production configuration, TLS, billing, backups and restore.
 - [Limitations](docs/limitations.md): what is deliberately out of scope or not finished.
+- [Changelog](CHANGELOG.md): bugs fixed and features added since the first release.
 - [Implementation plan](docs/implementation-plan.md): the original decisions.

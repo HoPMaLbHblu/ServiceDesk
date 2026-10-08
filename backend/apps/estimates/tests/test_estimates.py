@@ -179,3 +179,15 @@ def test_approval_email_is_queued_once(shop, diagnosing_order):
     assert Notification.objects.filter(kind=NotificationKind.ESTIMATE_APPROVAL_REQUEST).count() == 1
     body = Notification.objects.get(kind=NotificationKind.ESTIMATE_APPROVAL_REQUEST).body
     assert re.search(r"/approve/[\w-]{20,}", body)
+
+
+def test_estimate_total_too_large_is_a_validation_error(shop, diagnosing_order):
+    estimate = estimates.create_version(order=diagnosing_order, actor=shop.manager)
+    client = shop.client("manager")
+    url = f"/api/v1/estimates/{estimate.public_id}/lines/"
+    huge = {"description": "x", "quantity": "99999999", "unit_price": "99999999"}
+    response = client.post(url, {"lines": [huge]}, format="json")
+    assert response.status_code == 400
+    assert "lines.0.quantity" in response.data["error"]["fields"]
+    ok = {"description": "x", "quantity": "2", "unit_price": "10"}
+    assert client.post(url, {"lines": [ok]}, format="json").status_code == 200

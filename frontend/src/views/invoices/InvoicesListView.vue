@@ -10,7 +10,7 @@ import StatusBadge from '@/components/ui/StatusBadge.vue'
 import { useListQuery } from '@/composables/useListQuery'
 import { date, money } from '@/lib/format'
 
-const { search, page, filters, query } = useListQuery<InvoiceList>('invoices', '/invoices/', ['outstanding', 'status'])
+const { search, page, filters, query } = useListQuery<InvoiceList>('invoices', '/invoices/', ['outstanding', 'overdue', 'status'])
 </script>
 
 <template>
@@ -20,6 +20,9 @@ const { search, page, filters, query } = useListQuery<InvoiceList>('invoices', '
       <SearchInput v-model="search" label="Search invoices" placeholder="Number, order or customer" />
       <label class="flex items-center gap-2 text-sm">
         <input v-model="filters.outstanding" type="checkbox" true-value="true" false-value="" class="h-4 w-4" /> Unpaid only
+      </label>
+      <label class="flex items-center gap-2 text-sm">
+        <input v-model="filters.overdue" type="checkbox" true-value="true" false-value="" class="h-4 w-4" /> Overdue only
       </label>
     </div>
     <div class="card overflow-hidden">
@@ -48,7 +51,10 @@ const { search, page, filters, query } = useListQuery<InvoiceList>('invoices', '
                 </td>
                 <td>{{ i.customer_name }}</td>
                 <td class="hidden whitespace-nowrap sm:table-cell">{{ date(i.issued_at) }}</td>
-                <td class="hidden whitespace-nowrap sm:table-cell">{{ date(i.due_date) }}</td>
+                <td class="hidden whitespace-nowrap sm:table-cell">
+                  {{ date(i.due_date) }}
+                  <span v-if="i.is_overdue" class="ml-1 text-xs font-medium text-red-700">Overdue</span>
+                </td>
                 <td class="text-right tabular-nums">{{ money(i.total, i.currency) }}</td>
                 <td class="text-right tabular-nums">{{ money(i.balance_due, i.currency) }}</td>
                 <td><StatusBadge :status="i.status === 'void' ? 'void' : i.payment_status" kind="payment" /></td>

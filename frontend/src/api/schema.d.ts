@@ -2329,6 +2329,8 @@ export interface components {
             issued_at: string;
             /** Format: date */
             due_date?: string | null;
+            /** @description Issued, not fully paid, and the due date has passed in the shop's timezone. */
+            readonly is_overdue: boolean;
             /** Format: decimal */
             tax_rate: string;
             /** Format: decimal */
@@ -2381,6 +2383,8 @@ export interface components {
             issued_at: string;
             /** Format: date */
             due_date?: string | null;
+            /** @description Issued, not fully paid, and the due date has passed in the shop's timezone. */
+            readonly is_overdue: boolean;
         };
         /**
          * @description * `issued` - Issued
@@ -4550,6 +4554,7 @@ export interface operations {
                 /** @description Which field to use when ordering the results. */
                 ordering?: string;
                 outstanding?: boolean;
+                overdue?: boolean;
                 /** @description A page number within the paginated result set. */
                 page?: number;
                 /** @description Number of results to return per page. */

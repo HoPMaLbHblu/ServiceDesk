@@ -169,3 +169,35 @@ def test_pdf_renders(shop, invoice):
     assert pdf.startswith(b"%PDF") and len(pdf) > 1000
     response = shop.client("manager").get(f"/api/v1/invoices/{invoice.public_id}/pdf/")
     assert response.status_code == 200 and response["Content-Type"] == "application/pdf"
+
+
+def test_payment_cannot_be_dated_in_the_future(shop, invoice):
+    client = shop.client("manager")
+    url = f"/api/v1/invoices/{invoice.public_id}/payments/"
+    response = client.post(
+        url, {"amount": "1.00", "method": "cash", "received_at": "2099-01-01T00:00:00Z"}
+    )
+    assert response.status_code == 400 and "received_at" in response.data["error"]["fields"]
+    past = client.post(
+        url, {"amount": "1.00", "method": "cash", "received_at": "2024-01-01T00:00:00Z"}
+    )
+    assert past.status_code == 201
+
+
+def test_overdue_filter_and_flag(shop, invoice):
+    import datetime
+
+    client = shop.client("manager")
+    listing = client.get("/api/v1/invoices/?overdue=true")
+    assert listing.data["count"] == 0
+    Invoice.objects.filter(pk=invoice.pk).update(due_date=datetime.date(2020, 1, 1))
+    listing = client.get("/api/v1/invoices/?overdue=true")
+    assert listing.data["count"] == 1 and listing.data["results"][0]["is_overdue"] is True
+    assert client.get("/api/v1/invoices/?overdue=false").data["count"] == 0
+    # Paid in full is no longer overdue.
+    invoicing.record_payment(
+        invoice=invoice, amount=invoice.total, method="cash", actor=shop.manager
+    )
+    listing = client.get("/api/v1/invoices/")
+    assert listing.data["results"][0]["is_overdue"] is False
+    assert client.get("/api/v1/invoices/?overdue=true").data["count"] == 0

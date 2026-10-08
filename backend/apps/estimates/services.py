@@ -13,7 +13,7 @@ from django.utils import timezone
 from apps.accounts.tokens import hash_token, new_opaque_token
 from apps.audit.services import record
 from apps.core.exceptions import ConflictError, DomainError
-from apps.core.money import compute_totals, line_total
+from apps.core.money import MAX_AMOUNT, compute_totals, line_total
 from apps.orders import services as orders
 from apps.orders.models import EventKind, OrderStatus
 
@@ -111,6 +111,7 @@ def replace_lines(*, estimate: Estimate, lines: list[dict], notes: str | None, a
             code="estimate_locked",
         )
     estimate.lines.all().delete()
+    totals = []
     for position, data in enumerate(lines):
         part = data.get("part")
         if part is not None and part.business_id != estimate.business_id:
@@ -125,6 +126,13 @@ def replace_lines(*, estimate: Estimate, lines: list[dict], notes: str | None, a
         if unit_price is None:
             unit_price = part.selling_price if part else Decimal("0.00")
         quantity = Decimal(data["quantity"])
+        amount = line_total(quantity, unit_price)
+        totals.append((amount, data.get("taxable", True)))
+        if amount > MAX_AMOUNT or compute_totals(totals, estimate.tax_rate).total > MAX_AMOUNT:
+            raise DomainError(
+                "The estimate total is too large.",
+                fields={f"lines.{position}.quantity": [f"The total must stay below {MAX_AMOUNT}."]},
+            )
         EstimateLine.objects.create(
             business_id=estimate.business_id,
             estimate=estimate,
@@ -136,7 +144,7 @@ def replace_lines(*, estimate: Estimate, lines: list[dict], notes: str | None, a
             quantity=quantity,
             unit_price=unit_price,
             taxable=data.get("taxable", True),
-            line_total=line_total(quantity, unit_price),
+            line_total=amount,
         )
     if notes is not None:
         estimate.notes = notes

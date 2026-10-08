@@ -1728,6 +1728,10 @@ paths:
         name: outstanding
         schema:
           type: boolean
+      - in: query
+        name: overdue
+        schema:
+          type: boolean
       - name: page
         required: false
         in: query
@@ -4472,7 +4476,7 @@ components:
         estimate_valid_days:
           type: integer
           maximum: 32767
-          minimum: 0
+          minimum: 1
         email:
           oneOf:
           - type: string
@@ -5212,6 +5216,11 @@ components:
           type: string
           format: date
           nullable: true
+        is_overdue:
+          type: boolean
+          description: Issued, not fully paid, and the due date has passed in the
+            shop's timezone.
+          readOnly: true
         tax_rate:
           type: string
           format: decimal
@@ -5253,6 +5262,7 @@ components:
       - customer_name
       - estimate_version
       - id
+      - is_overdue
       - issued_at
       - lines
       - number
@@ -5357,11 +5367,17 @@ components:
           type: string
           format: date
           nullable: true
+        is_overdue:
+          type: boolean
+          description: Issued, not fully paid, and the due date has passed in the
+            shop's timezone.
+          readOnly: true
       required:
       - balance_due
       - currency
       - customer_name
       - id
+      - is_overdue
       - issued_at
       - number
       - order
@@ -6195,7 +6211,7 @@ components:
         estimate_valid_days:
           type: integer
           maximum: 32767
-          minimum: 0
+          minimum: 1
         email:
           oneOf:
           - type: string

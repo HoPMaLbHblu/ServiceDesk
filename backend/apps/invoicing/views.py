@@ -1,6 +1,7 @@
 import django_filters
 from django.db.models import F
 from django.http import HttpResponse
+from django.utils import timezone
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import OpenApiResponse, extend_schema
 from rest_framework import mixins, status, viewsets
@@ -8,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from apps.core.api import TenantViewMixin
-from apps.core.tenancy import MANAGERS
+from apps.core.tenancy import MANAGERS, require_tenant
 
 from . import services
 from .models import Invoice, Payment
@@ -27,6 +28,7 @@ from .serializers import (
 class InvoiceFilter(django_filters.FilterSet):
     order = django_filters.UUIDFilter(field_name="order__public_id")
     outstanding = django_filters.BooleanFilter(method="filter_outstanding")
+    overdue = django_filters.BooleanFilter(method="filter_overdue")
     issued_after = django_filters.DateFilter(field_name="issued_at", lookup_expr="date__gte")
     issued_before = django_filters.DateFilter(field_name="issued_at", lookup_expr="date__lte")
 
@@ -39,6 +41,14 @@ class InvoiceFilter(django_filters.FilterSet):
             return queryset
         outstanding = queryset.filter(status="issued", amount_paid__lt=F("total"))
         return outstanding if value else queryset.exclude(pk__in=outstanding.values("pk"))
+
+    def filter_overdue(self, queryset, name, value):
+        if value is None:
+            return queryset
+        business = require_tenant(self.request).business
+        today = timezone.now().astimezone(business.tzinfo).date()
+        overdue = queryset.filter(status="issued", amount_paid__lt=F("total"), due_date__lt=today)
+        return overdue if value else queryset.exclude(pk__in=overdue.values("pk"))
 
 
 class InvoiceViewSet(

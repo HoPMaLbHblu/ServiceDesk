@@ -1,5 +1,7 @@
+from datetime import timedelta
 from decimal import Decimal
 
+from django.utils import timezone
 from rest_framework import serializers
 
 from apps.core.api import TenantRelatedField
@@ -66,6 +68,7 @@ class InvoiceListSerializer(serializers.ModelSerializer):
     customer_name = serializers.SerializerMethodField()
     balance_due = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
     payment_status = serializers.CharField(source="order.payment_status", read_only=True)
+    is_overdue = serializers.SerializerMethodField()
 
     class Meta:
         model = Invoice
@@ -84,7 +87,18 @@ class InvoiceListSerializer(serializers.ModelSerializer):
             "payment_status",
             "issued_at",
             "due_date",
+            "is_overdue",
         ]
+
+    def get_is_overdue(self, invoice) -> bool:
+        """Issued, not fully paid, and the due date has passed in the shop's timezone."""
+        if (
+            invoice.status != "issued"
+            or invoice.amount_paid >= invoice.total
+            or not invoice.due_date
+        ):
+            return False
+        return invoice.due_date < timezone.now().astimezone(invoice.business.tzinfo).date()
 
     def get_customer_name(self, invoice) -> str:
         return invoice.customer_snapshot.get("name", "")
@@ -132,6 +146,12 @@ class RecordPaymentSerializer(serializers.Serializer):
     idempotency_key = serializers.CharField(
         max_length=80, required=False, allow_blank=True, default=""
     )
+
+    def validate_received_at(self, value):
+        # A few minutes of slack covers clocks that run slightly ahead of the server.
+        if value > timezone.now() + timedelta(minutes=5):
+            raise serializers.ValidationError("A payment cannot be dated in the future.")
+        return value
 
 
 class RefundSerializer(serializers.Serializer):

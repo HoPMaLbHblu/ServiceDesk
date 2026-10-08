@@ -222,3 +222,35 @@ def test_password_login_works_for_invited_user_after_accepting(shop):
     )
     assert client.post("/api/v1/invitations/accept/", {"token": token}).status_code == 200
     assert client.get("/api/v1/customers/").status_code == 200
+
+
+def test_business_settings_validation(shop):
+    client = shop.client("owner")
+    for payload, field in [
+        ({"default_labor_rate": "-5"}, "default_labor_rate"),
+        ({"estimate_valid_days": 0}, "estimate_valid_days"),
+    ]:
+        response = client.patch("/api/v1/business/", payload)
+        assert response.status_code == 400 and field in response.data["error"]["fields"]
+
+
+def test_currency_is_locked_once_money_exists(shop):
+    from apps.estimates import services as estimates
+    from apps.orders import services as orders
+    from apps.orders.models import OrderStatus
+
+    client = shop.client("owner")
+    other = "EUR" if shop.business.currency != "EUR" else "USD"
+    assert client.patch("/api/v1/business/", {"currency": other}).status_code == 200
+    order = orders.create_order(
+        business=shop.business,
+        customer=shop.customer,
+        device=shop.device,
+        problem_description="x",
+        actor=shop.manager,
+        assigned_technician=shop.technician,
+    )
+    orders.transition(order=order, to_status=OrderStatus.DIAGNOSING, actor=shop.manager)
+    estimates.create_version(order=order, actor=shop.manager)
+    response = client.patch("/api/v1/business/", {"currency": "GBP" if other != "GBP" else "USD"})
+    assert response.status_code == 400 and "currency" in response.data["error"]["fields"]

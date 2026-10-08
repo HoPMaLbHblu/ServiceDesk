@@ -6,6 +6,8 @@ from decimal import ROUND_HALF_UP, Decimal
 
 CENT = Decimal("0.01")
 ZERO = Decimal("0.00")
+# Largest amount a MONEY column (12 digits, 2 decimal places) can store.
+MAX_AMOUNT = Decimal("9999999999.99")
 
 
 def quantize(value: Decimal) -> Decimal:

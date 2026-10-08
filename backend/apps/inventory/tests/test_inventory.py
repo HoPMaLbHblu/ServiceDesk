@@ -200,3 +200,22 @@ def test_low_stock_alert_fires_once_when_crossing_threshold(shop, order):
         order=order, part=shop.part, quantity=Decimal("1"), actor=shop.manager, idempotency_key="c"
     )
     assert alerts.count() == 2
+
+
+def test_negative_prices_and_threshold_are_validation_errors(shop):
+    client = shop.client("manager")
+    response = client.post(
+        "/api/v1/parts/",
+        {
+            "sku": "NEG-1",
+            "name": "Neg",
+            "unit": "piece",
+            "selling_price": "-1",
+            "purchase_cost": "-1",
+        },
+    )
+    assert response.status_code == 400
+    assert {"selling_price", "purchase_cost"} <= set(response.data["error"]["fields"])
+    response = client.patch(f"/api/v1/parts/{shop.part.public_id}/", {"low_stock_threshold": "-1"})
+    assert response.status_code == 400
+    assert "low_stock_threshold" in response.data["error"]["fields"]

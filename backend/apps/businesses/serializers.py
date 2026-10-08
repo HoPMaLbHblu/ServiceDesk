@@ -23,9 +23,30 @@ class BusinessSerializer(serializers.ModelSerializer):
             "created_at",
         ]
         read_only_fields = ["slug", "created_at"]
+        extra_kwargs = {
+            "default_labor_rate": {"min_value": 0},
+            "estimate_valid_days": {"min_value": 1},
+        }
 
     def validate_timezone(self, value):
         validate_timezone(value)
+        return value
+
+    def validate_currency(self, value):
+        # Amounts are stored without conversion and reports add them up, so the currency is
+        # fixed once money has been quoted or invoiced.
+        business = self.instance
+        if business is not None and value != business.currency:
+            from apps.estimates.models import Estimate
+            from apps.invoicing.models import Invoice
+
+            if (
+                Estimate.objects.filter(business=business).exists()
+                or Invoice.objects.filter(business=business).exists()
+            ):
+                raise serializers.ValidationError(
+                    "The currency cannot change after estimates or invoices have been created."
+                )
         return value
 
 
